@@ -42,7 +42,7 @@ public class LCX extends Thread
             }
         catch(IOException e)
             {
-            System.out.println("Could not listen on port " + String.valueOf(PORT));
+            System.err.println("Could not listen on port " + String.valueOf(PORT));
             System.exit(-1);
             }
         System.out.println("Waiting for a client...");
@@ -57,7 +57,7 @@ public class LCX extends Thread
                 }
             catch (IOException e)
                 {
-                System.out.println("Accept failed: " + String.valueOf(PORT));
+                System.err.println("Accept failed: " + String.valueOf(PORT));
                 System.exit(-1);   
                 }
             }
