@@ -29,14 +29,13 @@ public class ClientWorker implements Runnable
     private static Logger systemLog;
     private FileHandler fh;
     private String serverUSID = "unset";
-    private SecureRandom random = new SecureRandom();
     boolean running = true;
 
     
     public ClientWorker(Socket inClient)
         {
         client = inClient;
-        serverUSID = getUSID();
+        serverUSID = genUSID();
         System.out.println("Client connected: " + client.getLocalSocketAddress() + " USID: " + serverUSID);
         }
     
@@ -76,7 +75,7 @@ public class ClientWorker implements Runnable
                 System.out.println("Client: New Session");
                 break;
             case "New USID":
-                out.writeUTF(getUSID());
+                out.writeUTF(genUSID());
                 System.out.println("Client: New USID");
                 break;
             case "Login Request":
@@ -120,7 +119,7 @@ public class ClientWorker implements Runnable
                 String transferAmount = in.readUTF();
                 userTransLog.log(Level.INFO, "[TRANSFER OUT]: Transfering: {0} Transfering to: {1}", new Object[]{transferAmount, transferTo});
                 LCX.databaseIF.transfer(user.getUserNumber(),transferTo,transferAmount);
-                userTransLog.log(Level.INFO, "[TRANSFER REPORT]: Transfer Complete. Account now has: {0}", LCX.databaseIF.readLatinumString(user.getUserNumber(),getUSID()));
+                userTransLog.log(Level.INFO, "[TRANSFER REPORT]: Transfer Complete. Account now has: {0}", LCX.databaseIF.readLatinumString(user.getUserNumber(),genUSID()));
                 out.writeUTF("Done with transfer");
                 break;
             case "Close":
@@ -203,8 +202,9 @@ public class ClientWorker implements Runnable
             }
         }
     
-    public String getUSID()
+    public static String genUSID()
         {
+        SecureRandom random = new SecureRandom();
         return new BigInteger(130, random).toString(32);
         }
     }
