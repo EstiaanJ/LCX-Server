@@ -88,6 +88,17 @@ public class ClientWorker implements Runnable
         private CommandEnum(String msg) {
             this.msg = msg;
         }
+        
+        public static CommandEnum fromString(String text) {
+            if (text != null) {
+                for (CommandEnum b : CommandEnum.values()) {
+                    if (text.equals(b.msg())) {
+                        return b;
+                    }
+                }
+            }
+            return null;
+        }
 
         public String msg() {
             return msg;
@@ -122,21 +133,21 @@ public class ClientWorker implements Runnable
         if(running)
             {
              System.out.println("Waiting for command from client...");
-            String command = in.readUTF();
+            CommandEnum command = CommandEnum.fromString(readCommand(in));
             switch (command)
                 {
-            case "New Session":
+            case NEW_SESSION_REQUEST:
                 out.writeUTF("New Session Granted");
                 System.out.println("Client: New Session");
                 break;
-            case "New USID":
+            case NEW_USID_REQUEST:
                 out.writeUTF(genUSID());
                 System.out.println("Client: New USID");
                 break;
-            case "Login Request":
+            case LOGIN_REQUEST:
                 loginRequested(in,out);
                 break;
-            case "Update":
+            case UPDATE_REQUEST:
                 System.out.println("Client: Update");
                 out.writeUTF(LCX.databaseIF.readName(user.getUserNumber(),serverUSID));
                 System.out.println("Client says " + in.readUTF());
@@ -144,7 +155,7 @@ public class ClientWorker implements Runnable
                 System.out.println("Client says " + in.readUTF());
                 out.writeUTF(LCX.databaseIF.readTransactionLog(user.getUserNumber(),serverUSID));
                 break; 
-            case "New User":
+            case NEW_USER_REQUEST:
                 System.out.println("Client: New User");
                 out.writeUTF("New User Ready");
                 String newUserAccNum = in.readUTF();
@@ -162,11 +173,11 @@ public class ClientWorker implements Runnable
                     System.err.println("Failed to create account");
                     }
                 break;
-            case "New Account Number":
+            case NEW_ACCOUNT_NUMBER_REQUEST:
                 System.out.println("Client: New Account Number");
                 out.writeUTF(LCX.databaseIF.newAccountNumber());
                 break;
-            case "Transfer":
+            case NEW_TRANSFER_REQUEST:
                 System.out.println("Client: Transfer");
                 out.writeUTF("Ready for transfer to");
                 String transferTo = in.readUTF();
@@ -177,7 +188,7 @@ public class ClientWorker implements Runnable
                 userTransLog.log(Level.INFO, "[TRANSFER REPORT]: Transfer Complete. Account now has: {0}", LCX.databaseIF.readLatinumString(user.getUserNumber(),genUSID()));
                 out.writeUTF("Done with transfer");
                 break;
-            case "Close":
+            case CONNECTION_CLOSE_REQUEST:
                 System.out.println("Client: Close");
                 out.writeUTF("Closing");
                 running = false;
@@ -191,7 +202,7 @@ public class ClientWorker implements Runnable
                 out.writeUTF("SERVER ERROR");
                 if(in.readUTF().equals("Error Report Request"))
                     {
-                    out.writeUTF(command);
+                    sendCommand(out,command);
                     System.out.println("Client says " + in.readUTF());
                     out.writeUTF("[Server Error]: The server reported an illegal command was sent, that command was: " + command);
                     System.out.println("The error was succesfully sent to the client.");
@@ -216,9 +227,9 @@ public class ClientWorker implements Runnable
         {
         System.out.println("Client: Login Request");
         System.out.println("Exiting command structure to recieve login data");
-        out.writeUTF("Login Ready");
-        String inAccountNum = in.readUTF();
-        out.writeUTF("Ready for password");
+        sendCommand(out,CommandEnum.LOGIN_AWAITING_ACCOUNT_NUMBER);
+        String inAccountNum = readCommand(in);
+        sendCommand(out,CommandEnum.LOGIN_AWAITING_PASSWORD);
         String inPassword = in.readUTF();
         boolean validLogin = LCX.databaseIF.login(inAccountNum,inPassword,serverUSID);
         if(validLogin)
