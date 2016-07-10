@@ -21,7 +21,7 @@ import java.util.logging.SimpleFormatter;
  *
  * @author Estiaan Janse Van Rensburg <https://github.com/EstiaanJ>
  */
-public class ClientWorker implements Runnable
+public class ClientWorker
     {
     private Socket client;
     private UserAccount user;
@@ -29,12 +29,28 @@ public class ClientWorker implements Runnable
     private static Logger systemLog;
     private FileHandler fh;
     private String serverUSID = "unset";
+    private DataInputStream in;
+    private DataOutputStream out;
+    private final String firstCommand;
     boolean running = true;
+    
 
     
-    public ClientWorker(Socket inClient)
+    public ClientWorker(Socket inClient,DataInputStream inDIS,DataOutputStream inDOS,String inFirstCommand)
         {
+        firstCommand = inFirstCommand;
+        if(firstCommand.equals("New Session"))
+            {
+            
+            }
+        else
+            {
+            System.err.println("First Command was not 'New Session'");
+            System.exit(-1); //Need a better way to handle this first command thing, but I don't really see how it won't be the right command, unless it was sent to the original client worker by mistake.
+            }
         client = inClient;
+        in = inDIS;
+        out = inDOS;
         serverUSID = genUSID();
         System.out.println("Client connected: " + client.getLocalSocketAddress() + " USID: " + serverUSID);
         }
@@ -54,7 +70,7 @@ public class ClientWorker implements Runnable
         out.writeUTF(sendstr);
     }
     
-    public enum CommandEnum {
+    private enum CommandEnum {
         NEW_SESSION_REQUEST("New Session"),
         NEW_SESSION_ACKNOWLEDGE("New Session Granted"),
         
@@ -109,15 +125,13 @@ public class ClientWorker implements Runnable
             return msg;
         }
     }
-    
-    @Override
+
     public void run()
         {
         try
             {
-            System.out.println("Opening IO");
-            DataInputStream in = new DataInputStream(client.getInputStream());
-            DataOutputStream out = new DataOutputStream(client.getOutputStream());
+            sendCommand(out, CommandEnum.NEW_SESSION_ACKNOWLEDGE);
+            System.out.println("Client: New Session");
             while(running)
                 {
                 waitForCommand(in,out);
@@ -133,7 +147,7 @@ public class ClientWorker implements Runnable
             }
         }
     
-    public void waitForCommand(DataInputStream in,DataOutputStream out) throws IOException 
+    private void waitForCommand(DataInputStream in,DataOutputStream out) throws IOException 
         {
         if(running)
             {
@@ -143,8 +157,8 @@ public class ClientWorker implements Runnable
             switch (command)
                 {
             case NEW_SESSION_REQUEST:
-                sendCommand(out, CommandEnum.NEW_SESSION_ACKNOWLEDGE);
-                System.out.println("Client: New Session");
+                //The stuff in here was moved to "run" since it will always be called first.
+                System.out.println("Getting to this println statment, in case NEW_SESSION_REQUEST: on switch(command), should be impossible...");
                 break;
             case NEW_USID_REQUEST:
                 sendString(out,genUSID());
@@ -229,7 +243,7 @@ public class ClientWorker implements Runnable
         //System.out.println("Exited wait for command");
         }
     
-    public void loginRequested(DataInputStream in,DataOutputStream out) throws IOException
+    private void loginRequested(DataInputStream in,DataOutputStream out) throws IOException
         {
         System.out.println("Client: Login Request");
         System.out.println("Exiting command structure to recieve login data");

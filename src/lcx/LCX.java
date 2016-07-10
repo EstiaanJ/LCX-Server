@@ -48,11 +48,11 @@ public class LCX extends Thread
         System.out.println("Waiting for a client...");
         while(true)
             {
-            ClientWorker w;
+            ClientAcceptor clientAcceptor;
             try
                 {
-                w = new ClientWorker(serverSocket.accept());
-                Thread thread = new Thread(w);
+                clientAcceptor = new ClientAcceptor(serverSocket.accept());
+                Thread thread = new Thread(clientAcceptor);
                 thread.start();
                 }
             catch (IOException e)
