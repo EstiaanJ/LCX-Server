@@ -29,16 +29,86 @@ public class ClientWorker implements Runnable
     private static Logger systemLog;
     private FileHandler fh;
     private String serverUSID = "unset";
-    private SecureRandom random = new SecureRandom();
     boolean running = true;
 
     
     public ClientWorker(Socket inClient)
         {
         client = inClient;
-        serverUSID = getUSID();
+        serverUSID = genUSID();
         System.out.println("Client connected: " + client.getLocalSocketAddress() + " USID: " + serverUSID);
         }
+  
+    private void sendCommand(DataOutputStream out, CommandEnum com) throws IOException 
+        {
+        out.writeUTF(com.msg());
+        }
+    
+    private String readString(DataInputStream in) throws IOException
+    {
+        return in.readUTF();
+    }
+    
+    private void sendString(DataOutputStream out, String sendstr) throws IOException
+    {
+        out.writeUTF(sendstr);
+    }
+    
+    public enum CommandEnum {
+        NEW_SESSION_REQUEST("New Session"),
+        NEW_SESSION_ACKNOWLEDGE("New Session Granted"),
+        
+        NEW_USID_REQUEST("New USID"),
+        
+        UPDATE_REQUEST("Update"),
+        
+        NEW_USER_REQUEST("New User"),
+        NEW_USER_ACKNOWLEDGE("New User Ready"),
+        
+        RECEIPT_ACCOUNT_NUMBER("Account Number Recieved"),
+        RECEIPT_ACCOUNT_NAME("Name Recieved"),
+        RECEIPT_ACCOUNT_PASSWORD("Password Recieved"),
+        
+        NEW_ACCOUNT_NUMBER_REQUEST("New Account Number"),
+        
+        NEW_TRANSFER_REQUEST("Transfer"),
+        NEW_TRANSFER_AWAITING_RECEIPIENT("Ready for transfer to"),
+        NEW_TRANSFER_AWAITING_AMOUNT("Ready for amount"),
+        RECEIPT_TRANSFER_COMPLETE("Done with transfer"),
+        
+        CONNECTION_CLOSE_REQUEST("Close"),
+        CONNECTION_CLOSE_ACKNOWLEDGE("Closing"),
+        
+        LOGIN_REQUEST("Login Request"),
+        LOGIN_AWAITING_ACCOUNT_NUMBER("Login Ready"),
+        LOGIN_AWAITING_PASSWORD("Ready for password"),
+        LOGIN_PREPARE_FOR_DETAILS("Login Succesful"),
+        LOGIN_FAIL_RECEIPT("Login Unsuccesful"),
+        LOGIN_COMPLETE_RECEIPT("Login Done"),
+        
+        ERROR_GENERIC("SERVER ERROR");
+        
+        private String msg;
+
+        private CommandEnum(String msg) {
+            this.msg = msg;
+        }
+        
+        public static CommandEnum fromString(String text) {
+            if (text != null) {
+                for (CommandEnum b : CommandEnum.values()) {
+                    if (text.equals(b.msg())) {
+                        return b;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public String msg() {
+            return msg;
+        }
+    }
     
     @Override
     public void run()
@@ -68,37 +138,38 @@ public class ClientWorker implements Runnable
         if(running)
             {
              System.out.println("Waiting for command from client...");
-            String command = in.readUTF();
+             String inMessage = readString(in);
+            CommandEnum command = CommandEnum.fromString(inMessage);
             switch (command)
                 {
-            case "New Session":
-                out.writeUTF("New Session Granted");
+            case NEW_SESSION_REQUEST:
+                sendCommand(out, CommandEnum.NEW_SESSION_ACKNOWLEDGE);
                 System.out.println("Client: New Session");
                 break;
-            case "New USID":
-                out.writeUTF(getUSID());
+            case NEW_USID_REQUEST:
+                sendString(out,genUSID());
                 System.out.println("Client: New USID");
                 break;
-            case "Login Request":
+            case LOGIN_REQUEST:
                 loginRequested(in,out);
                 break;
-            case "Update":
+            case UPDATE_REQUEST:
                 System.out.println("Client: Update");
-                out.writeUTF(LCX.databaseIF.readName(user.getUserNumber(),serverUSID));
-                System.out.println("Client says " + in.readUTF());
-                out.writeUTF(LCX.databaseIF.readLatinumString(user.getUserNumber(),serverUSID));
-                System.out.println("Client says " + in.readUTF());
-                out.writeUTF(LCX.databaseIF.readTransactionLog(user.getUserNumber(),serverUSID));
+                sendString(out,LCX.databaseIF.readName(user.getUserNumber(),serverUSID));
+                System.out.println("Client says " + readString(in));
+                sendString(out,LCX.databaseIF.readLatinumString(user.getUserNumber(),serverUSID));
+                System.out.println("Client says " + readString(in));
+                sendString(out,LCX.databaseIF.readTransactionLog(user.getUserNumber(),serverUSID));
                 break; 
-            case "New User":
+            case NEW_USER_REQUEST:
                 System.out.println("Client: New User");
-                out.writeUTF("New User Ready");
-                String newUserAccNum = in.readUTF();
-                out.writeUTF("Account Number Recieved");
-                String newName = in.readUTF();
-                out.writeUTF("Name Recieved");
-                String newPass = in.readUTF();
-                out.writeUTF("Password Recieved");
+                sendCommand(out, CommandEnum.NEW_USER_ACKNOWLEDGE);
+                String newUserAccNum = readString(in);
+                sendCommand(out, CommandEnum.RECEIPT_ACCOUNT_NUMBER);
+                String newName = readString(in);
+                sendCommand(out, CommandEnum.RECEIPT_ACCOUNT_NAME);
+                String newPass = readString(in);
+                sendCommand(out, CommandEnum.RECEIPT_ACCOUNT_PASSWORD);
                 if(LCX.databaseIF.createNewAccount(newUserAccNum,newName,newPass))
                     {
                     System.out.println("Created Account Succesfully");
@@ -108,24 +179,24 @@ public class ClientWorker implements Runnable
                     System.err.println("Failed to create account");
                     }
                 break;
-            case "New Account Number":
+            case NEW_ACCOUNT_NUMBER_REQUEST:
                 System.out.println("Client: New Account Number");
-                out.writeUTF(LCX.databaseIF.newAccountNumber());
+                sendString(out, LCX.databaseIF.newAccountNumber());
                 break;
-            case "Transfer":
+            case NEW_TRANSFER_REQUEST:
                 System.out.println("Client: Transfer");
-                out.writeUTF("Ready for transfer to");
-                String transferTo = in.readUTF();
-                out.writeUTF("Ready for amount");
-                String transferAmount = in.readUTF();
+                sendCommand(out,CommandEnum.NEW_TRANSFER_AWAITING_RECEIPIENT);
+                String transferTo = readString(in);
+                sendCommand(out,CommandEnum.NEW_TRANSFER_AWAITING_AMOUNT);
+                String transferAmount = readString(in);
                 userTransLog.log(Level.INFO, "[TRANSFER OUT]: Transfering: {0} Transfering to: {1}", new Object[]{transferAmount, transferTo});
                 LCX.databaseIF.transfer(user.getUserNumber(),transferTo,transferAmount);
-                userTransLog.log(Level.INFO, "[TRANSFER REPORT]: Transfer Complete. Account now has: {0}", LCX.databaseIF.readLatinumString(user.getUserNumber(),getUSID()));
-                out.writeUTF("Done with transfer");
+                userTransLog.log(Level.INFO, "[TRANSFER REPORT]: Transfer Complete. Account now has: {0}", LCX.databaseIF.readLatinumString(user.getUserNumber(),genUSID()));
+                sendCommand(out,CommandEnum.RECEIPT_TRANSFER_COMPLETE);
                 break;
-            case "Close":
+            case CONNECTION_CLOSE_REQUEST:
                 System.out.println("Client: Close");
-                out.writeUTF("Closing");
+                sendCommand(out, CommandEnum.CONNECTION_CLOSE_ACKNOWLEDGE);
                 running = false;
                 this.fh.close();
                 in.close();
@@ -134,12 +205,12 @@ public class ClientWorker implements Runnable
             default:
                 System.err.println("[Error]: default case reached in command switch, an illegal command was probably sent by the client.");
                 System.out.println("Attempting to send error to client...");
-                out.writeUTF("SERVER ERROR");
-                if(in.readUTF().equals("Error Report Request"))
+                sendString(out, "SERVER ERROR");
+                if(readString(in).equals("Error Report Request"))
                     {
-                    out.writeUTF(command);
-                    System.out.println("Client says " + in.readUTF());
-                    out.writeUTF("[Server Error]: The server reported an illegal command was sent, that command was: " + command);
+                    sendString(out,inMessage);
+                    System.out.println("Client says " + readString(in));
+                    sendString(out, "[Server Error]: The server reported an illegal command was sent, that command was: " + command);
                     System.out.println("The error was succesfully sent to the client.");
                     }
                 else
@@ -162,22 +233,22 @@ public class ClientWorker implements Runnable
         {
         System.out.println("Client: Login Request");
         System.out.println("Exiting command structure to recieve login data");
-        out.writeUTF("Login Ready");
-        String inAccountNum = in.readUTF();
-        out.writeUTF("Ready for password");
-        String inPassword = in.readUTF();
+        sendCommand(out,CommandEnum.LOGIN_AWAITING_ACCOUNT_NUMBER);
+        String inAccountNum = readString(in);
+        sendCommand(out,CommandEnum.LOGIN_AWAITING_PASSWORD);
+        String inPassword = readString(in);
         boolean validLogin = LCX.databaseIF.login(inAccountNum,inPassword,serverUSID);
         if(validLogin)
             {
-            out.writeUTF("Login Succesful");
+            sendCommand(out,CommandEnum.LOGIN_PREPARE_FOR_DETAILS);
             user = new UserAccount (inAccountNum,inPassword);
             System.out.println("Login was succesful, sending user data to client");
-            out.writeUTF(LCX.databaseIF.readName(user.getUserNumber(),serverUSID));
-            System.out.println(in.readUTF());
-            out.writeUTF(LCX.databaseIF.readLatinumString(user.getUserNumber(),serverUSID));
-            System.out.println(in.readUTF());
-            out.writeUTF(LCX.databaseIF.readTransactionLog(user.getUserNumber(),serverUSID));
-            System.out.println(in.readUTF());
+            sendString(out,LCX.databaseIF.readName(user.getUserNumber(),serverUSID));
+            System.out.println(readString(in));
+            sendString(out,LCX.databaseIF.readLatinumString(user.getUserNumber(),serverUSID));
+            System.out.println(readString(in));
+            sendString(out,LCX.databaseIF.readTransactionLog(user.getUserNumber(),serverUSID));
+            System.out.println(readString(in));
             
             this.userTransLog = Logger.getLogger(user.getUserNumber() + "_log");
             try
@@ -192,19 +263,20 @@ public class ClientWorker implements Runnable
                 e.printStackTrace();  
                 }
             
-            out.writeUTF("Login Done");
+            sendCommand(out, CommandEnum.LOGIN_COMPLETE_RECEIPT);
             System.out.println("Returning to command structure");
             }
         else
             {
-            out.writeUTF("Login Unsuccesful");
+            sendCommand(out, CommandEnum.LOGIN_FAIL_RECEIPT);
             System.out.println("[Login Error]: Login was unsuccesful");
             System.out.println("Returning to command structure");
             }
         }
     
-    public String getUSID()
+    public static String genUSID()
         {
+        SecureRandom random = new SecureRandom();
         return new BigInteger(130, random).toString(32);
         }
     }
