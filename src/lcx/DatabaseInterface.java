@@ -15,6 +15,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -22,6 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class DatabaseInterface
     {
+    private final static Logger dbLog = Logger.getLogger( LCX.class.getName() );;
     private FileWriter accountWriter;
     private BufferedWriter accountWriteBuffer;
     private FileReader accountReader;
@@ -35,19 +38,25 @@ public class DatabaseInterface
     public boolean createNewAccount(String inAccNum, String inName, String inPass)
         {
         boolean wasCreated = false;
+        dbLog.log(Level.FINE, "Server requested for a new account to be created with Account Number: {0} With Name: {1}", new Object[]{inAccNum, inName});
         try
             {
             accountWriter = new FileWriter(inAccNum + ".csv",true);
+            dbLog.log(Level.FINEST, "Created file: {0}.csv", inAccNum);
             accountWriteBuffer = new BufferedWriter(accountWriter);
             accountWriteBuffer.write(inAccNum);
             accountWriteBuffer.write(System.lineSeparator());
+            dbLog.log(Level.FINEST, "Wrote Account Number: {0} to memory for file: {1}.csv", new Object[]{inAccNum, inAccNum});
             accountWriteBuffer.write(inPass);
             accountWriteBuffer.write(System.lineSeparator());
+            dbLog.log(Level.FINEST, "Wrote Password to memory for file: {0}.csv", inAccNum);
             accountWriteBuffer.write(inName);
             accountWriteBuffer.write(System.lineSeparator());
+            dbLog.log(Level.FINEST, "Wrote Name: {0} to memory for file: {1}.csv", new Object[]{inName, inAccNum});
             accountWriteBuffer.write("0");
             accountWriteBuffer.close();
             accountWriter.close();
+            dbLog.log(Level.FINEST, "Wrote all changes from memory to file: {0}.csv", inAccNum);
             wasCreated = true;
             }
         catch(IOException e)
@@ -57,12 +66,12 @@ public class DatabaseInterface
         return wasCreated;
         }
     
-    public void writeFileAppend()
+    private void writeFileAppend()
         {
         
         }
     
-    public void overwriteFile()
+    private void overwriteFile()
         {
         
         }
@@ -71,24 +80,32 @@ public class DatabaseInterface
         {
         try
             {
+            dbLog.log(Level.FINER, "Server requested to overwrite line number {0} in file {1}", new Object[]{pos, inFileName});
             List<String> allLines = new ArrayList();
+            dbLog.log(Level.FINEST, "Opening file as read only {0}.csv", inFileName);
             accountReader = new FileReader(inFileName + ".csv");
             accountReadBuffer = new BufferedReader(accountReader);
-
+            
+            dbLog.log(Level.FINEST, "Reading file into an Array List");
             String line;
             while((line = accountReadBuffer.readLine()) != null)
                 {
                 allLines.add(line);
                 }
+            
+            dbLog.log(Level.FINEST, "Removing line: {0} Line used to be: {1}", new Object[]{pos, allLines.get(pos)});
             allLines.remove(pos);
+            dbLog.log(Level.FINEST, "Adding line: {0} to position: {1}", new Object[]{inLine, pos});
             allLines.add(pos, inLine);
             
+            dbLog.log(Level.FINEST, "Closing file");
             accountReadBuffer.close();
             accountReader.close();
             
-            
+            dbLog.log(Level.FINEST, "Opening file: " + inFileName);
             accountWriter = new FileWriter(inFileName + ".csv");
             accountWriteBuffer = new BufferedWriter(accountWriter);
+            
             
             for (int i = 0; i < allLines.size(); i++)
                 {
@@ -97,57 +114,69 @@ public class DatabaseInterface
                     {
                     accountWriteBuffer.write(System.lineSeparator());
                     }
+                dbLog.log(Level.FINEST, "Writing to memory: {0}at position: {1}", new Object[]{allLines.get(i), i}); //This could be overkill
                 }
-            
+            dbLog.log(Level.FINEST, "Writing all changes to file.");
             accountWriteBuffer.close();
             accountWriter.close();
             }
         catch(IOException e)
             {
-            System.err.println("Could not write to file");
+            dbLog.log(Level.SEVERE, "Failed to write to file, this could be very bad, the file was: "
+                    + "{0} Tried to overwrite line: {1} With string: {2}", new Object[]{inFileName, pos, inLine});
+            LCX.systemLog.log(Level.SEVERE, "Failed to write to file: {0} Tried to "
+                    + "overwrite line: {1} With string: {2}", new Object[]{inFileName, pos, inLine});
             }
         }
     
     
-    public String readFileLine(String inFileName,int pos)
+    private String readFileLine(String inFileName,int pos)
         {
         String line = "ERROR";
         try
             {
+            dbLog.log(Level.FINEST, "Opening {0} as readOnly", inFileName);
             accountReader = new FileReader(inFileName + ".csv");
             accountReadBuffer = new BufferedReader(accountReader);
             for(int i = 0; i < pos + 1; i++) //0) Account number, 1) password, 2) name, 3) latinum
                 {
                 line = accountReadBuffer.readLine();
                 }
+            dbLog.log(Level.FINEST, "Line: {0} was read as: {1}", new Object[]{pos, line});
             accountReadBuffer.close();
             accountReader.close();
             }
         catch(IOException e)
             {
-            System.err.println("Could not read file");
-            
+            dbLog.log(Level.SEVERE, "Failed to read file line: {0} In file: {1}", new Object[]{pos, inFileName});
             }
         return line;
         }
     
-    public boolean login(String inAcc,String inPass,String inUSID)
+    public boolean login(String inAcc,String inPass)
         {
+        dbLog.log(Level.FINE, "Server requested login for Account: {0}", inAcc);
         boolean validLogin = false;
         String actualPass = readFileLine(inAcc,1);
-        System.out.println("Provided Password: " + inPass);
-        System.out.println("Actual Password: " + actualPass);
         if(inPass.equals(actualPass))
             {
+            dbLog.log(Level.FINE, "Passwords Matched");
             validLogin = true;
+            }
+        else
+            {
+            dbLog.log(Level.FINE, "Passwords did not Match");
             }
         return validLogin;
         }
     
     public boolean transfer(String inFrom, String inTo, String inAmount)
         {
+        dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]{inFrom, inTo, inAmount});
         boolean didTransfer = false;
+        
         String fromStartLatinum = readFileLine(inFrom,3);
+        
         System.out.println("Transfer From Account: " + inFrom + " had: " + fromStartLatinum);
         
         BigDecimal fromLatinum = new BigDecimal(fromStartLatinum);
