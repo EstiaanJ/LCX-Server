@@ -17,7 +17,7 @@ import java.net.SocketTimeoutException;
  */
 public class ClientAcceptor implements Runnable
     {
-    private ClientWorker clientWorker;
+    private Server clientWorker;
     private DataInputStream in;
     private DataOutputStream out;
     private final Socket client;
@@ -61,7 +61,7 @@ public class ClientAcceptor implements Runnable
                 }
             else
                 {
-                clientWorker = new ClientWorker(client,in,out,firstCommand);
+                clientWorker = new Server(client,in,out,firstCommand);
                 clientWorker.run();
                 }
             }

@@ -21,7 +21,7 @@ import java.util.logging.SimpleFormatter;
  *
  * @author Estiaan Janse Van Rensburg <https://github.com/EstiaanJ>
  */
-public class ClientWorker
+public class Server
     {
     private Socket client;
     private UserAccount user;
@@ -36,7 +36,7 @@ public class ClientWorker
     
 
     
-    public ClientWorker(Socket inClient,DataInputStream inDIS,DataOutputStream inDOS,String inFirstCommand)
+    public Server(Socket inClient,DataInputStream inDIS,DataOutputStream inDOS,String inFirstCommand)
         {
         firstCommand = inFirstCommand;
         if(firstCommand.equals("New Session"))
