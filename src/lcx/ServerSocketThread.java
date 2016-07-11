@@ -95,6 +95,7 @@ public class ServerSocketThread implements Runnable
                     //Nothing bad will happen if people don't log out, but doing so will destroy the token.
                     case LOGOUT_REQUEST:
                         sessions.remove(inMsg.getAuthToken());
+                        messageHandler.send(new Message(MessageHeaders.LOGOUT_CONFIRMED,PROTOCOL_VERSION,new String[0],null));
                         break;
                     default:
                         Message m = generateReply(inMsg);
@@ -102,7 +103,7 @@ public class ServerSocketThread implements Runnable
                             messageHandler.send(generateReply(inMsg));
                 }
                 
-            } catch (ClassNotFoundException | IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             
