@@ -6,6 +6,7 @@
 package lcx;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -37,10 +38,13 @@ public class ServerSocketThread implements Runnable
         {
         clientSocket = inClientSocket;
         
+        LCX.systemLog.log(Level.INFO, "Accepted client. Now opening input and output streams.");
         try {
         messageHandler = new MessageHandler(clientSocket.getInputStream(),clientSocket.getOutputStream());
         } catch (IOException e) {
             LCX.systemLog.log(Level.SEVERE, "Unable to open object streams.");
+            e.printStackTrace();
+            LCX.systemLog.log(Level.SEVERE,e.getMessage());
         }
         LCX.systemLog.log(Level.FINE, "Client connected: {0}", clientSocket.getLocalSocketAddress());
         
@@ -103,6 +107,9 @@ public class ServerSocketThread implements Runnable
                             messageHandler.send(generateReply(inMsg));
                 }
                 
+            } catch (EOFException e) {
+                //This end-of-field exception means that the socket has been closed.
+                return;
             } catch (IOException e) {
                 e.printStackTrace();
             }
