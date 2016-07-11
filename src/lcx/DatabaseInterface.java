@@ -210,22 +210,22 @@ public class DatabaseInterface
         return true;
         }
     
-    public void writeName(String inAcc,String inName, String inUSID)
+    public void writeName(String inAcc,String inName)
         {
         overwriteLine(inAcc,2,inName);
         }
     
-    public void writeLatinum(String inAcc,String inLatinum, String inUSID)
+    public void writeLatinum(String inAcc,String inLatinum)
         {
         overwriteLine(inAcc,3,inLatinum);
         }
     
-    public void writeLatinum(String inAcc,BigDecimal inLatinum, String inUSID)
+    public void writeLatinum(String inAcc,BigDecimal inLatinum)
         {
-        writeLatinum(inAcc,inLatinum.toPlainString(),inUSID);
+        writeLatinum(inAcc,inLatinum.toPlainString());
         }
     
-    public void writePassword(String inAcc,String inPassword, String inUSID)
+    public void writePassword(String inAcc,String inPassword)
         {
         overwriteLine(inAcc,1,inPassword);
         }
@@ -241,31 +241,31 @@ public class DatabaseInterface
         return newAccountNum;
         }
     
-    public String readName(String inAcc,String inUSID)
+    public String readName(String inAcc)
         {
         String name = readFileLine(inAcc,2);
         return name;
         }
     
-    public String readAcc(String inName,String inUSID)
+    public String readAcc(String inName)
         {
         String acc = "123456";
         return acc;
         }
     
-    public BigDecimal readLatinum(String inAcc,String inUSID)
+    public BigDecimal readLatinum(String inAcc)
         {
         BigDecimal money = new BigDecimal(readFileLine(inAcc,3));
         return money;
         }
     
-    public String readLatinumString(String inAcc,String inUSID)
+    public String readLatinumString(String inAcc)
         {
-        String money = readLatinum(inAcc,inUSID).toPlainString();
+        String money = readLatinum(inAcc).toPlainString();
         return money;
         }
     
-    public String readTransactionLog(String inAcc,String inUSID)
+    public String readTransactionLog(String inAcc)
         {
         String log = "default";
         return log;
