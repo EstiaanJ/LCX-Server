@@ -7,6 +7,8 @@ package lcx;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -15,16 +17,19 @@ import java.net.ServerSocket;
  */
 public class LCX extends Thread
     {
+    public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
     public static DatabaseInterface databaseIF;
     private final static int PORT = 2388;
     private ServerSocket serverSocket;
     private final static int STD_TIMEOUT = 5;
 
+    
+            
     public LCX() throws IOException
         {
 
         }
-
+    
     @Override
     public void run()
         {
@@ -42,14 +47,15 @@ public class LCX extends Thread
             System.err.println("Could not listen on port " + String.valueOf(PORT));
             System.exit(-1);
             }
-        System.out.println("Waiting for a client...");
+        systemLog.log(Level.FINE, "Ready for clients.");
         while(true)
             {
-            ClientAcceptor clientAcceptor;
+            systemLog.log(Level.INFO, "Waiting for client...");
+            Server server;
             try
                 {
-                clientAcceptor = new ClientAcceptor(serverSocket.accept());
-                Thread thread = new Thread(clientAcceptor);
+                server = new Server(serverSocket.accept());
+                Thread thread = new Thread(server);
                 thread.start();
                 }
             catch (IOException e)
