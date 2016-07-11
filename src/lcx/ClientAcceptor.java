@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
+import shared.Commands;
+
 /**
  *
  * @author Estiaan Janse Van Rensburg <https://github.com/EstiaanJ>
