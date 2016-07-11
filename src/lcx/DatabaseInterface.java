@@ -27,9 +27,9 @@ import shared.UserAccount;
  */
 public class DatabaseInterface
     {
-
     private final static String DB_DIR = "database" + File.separator;
     private final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
+    private final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
     private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
     private static FileHandler fh;
     private FileWriter accountWriter;
@@ -71,7 +71,12 @@ public class DatabaseInterface
             }
         return validLogin;
         }
-
+    
+    public boolean createNewAccount(String inName, String inPass)
+        {
+        return createNewAccount(newAccountNumber(),inName,inPass);
+        }
+    
     public boolean createNewAccount(String inAccNum, String inName, String inPass)
         {
         boolean wasCreated = false;
@@ -139,7 +144,7 @@ public class DatabaseInterface
         toLatinum = toLatinum.add(amount);
         System.out.println("Transfer To Account: " + inTo + " now has: " + toLatinum.toPlainString());
 
-        String bankStartLatinum = readFileLine("816192", 3);
+        String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER , 3);
         System.out.println("Bank Account had: " + bankStartLatinum);
         BigDecimal bankLatinum = new BigDecimal(bankStartLatinum);
         bankLatinum = bankLatinum.add(fee);
@@ -150,7 +155,7 @@ public class DatabaseInterface
         System.out.println("Writing 'Transfer To' Account");
         overwriteLine(inTo, 3, toLatinum.toPlainString());
         System.out.println("Writing Bank Account");
-        overwriteLine("816192", 3, bankLatinum.toPlainString());
+        overwriteLine(LCX_FEE_ACCOUNT_NUMBER, 3, bankLatinum.toPlainString());
 
         return true;
         }
@@ -178,7 +183,7 @@ public class DatabaseInterface
     //***************************** Server Direct Interface Methods | High Level stuff **********************************
     
     /**
-    *Safley close the database after writing a status flag to the log.
+    *safely close the database after writing a status flag to the log.
     * At the moment that means saving the database log.
     *
     * @param flag the status flag
@@ -190,7 +195,7 @@ public class DatabaseInterface
         }    
     
     /**
-    *Safley close the database with the status flag 0.
+    *Safely close the database with the status flag 0.
     * At the moment that means saving the database log.
     *
     * @param flag the status flag
