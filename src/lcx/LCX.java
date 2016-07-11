@@ -51,10 +51,10 @@ public class LCX extends Thread
         while(true)
             {
             systemLog.log(Level.INFO, "Waiting for client...");
-            Server server;
+            ServerSocketThread server;
             try
                 {
-                server = new Server(serverSocket.accept());
+                server = new ServerSocketThread(serverSocket.accept());
                 Thread thread = new Thread(server);
                 thread.start();
                 }
