@@ -137,7 +137,7 @@ public class ServerSocketThread implements Runnable
                     Message m = generateReply(inMsg);
                     if (m != null)
                         {
-                        messageHandler.send(generateReply(inMsg));
+                        messageHandler.send(m);
                         }
                     }
 
