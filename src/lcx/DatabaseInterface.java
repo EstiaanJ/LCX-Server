@@ -30,12 +30,17 @@ public class DatabaseInterface
     private final static String DB_DIR = "database" + File.separator;
     private final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
     private final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
+    private final static int ACCOUNT_NUM_POS = 0;
+    private final static int PASSWORD_POS = 1;
+    private final static int NAME_POS = 2;
+    private final static int LATINUM_POS = 3;
     private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
     private static FileHandler fh;
     private FileWriter accountWriter;
     private BufferedWriter accountWriteBuffer;
     private FileReader accountReader;
     private BufferedReader accountReadBuffer;
+    
     //***************************** Constructors | Standard OO stuff **********************************
 
     public DatabaseInterface()
@@ -79,9 +84,8 @@ public class DatabaseInterface
             return newNum;
         }
     
-    public boolean createNewAccount(String inAccNum, String inName, String inPass)
+    public void createNewAccount(String inAccNum, String inName, String inPass)
         {
-        boolean wasCreated = false;
         dbLog.log(Level.FINE, "Server requested for a new account to be created with Account Number: {0} With Name: {1}", new Object[]
             {
             inAccNum, inName
@@ -110,13 +114,12 @@ public class DatabaseInterface
             accountWriteBuffer.close();
             accountWriter.close();
             dbLog.log(Level.FINEST, "Wrote all changes from memory to file: {0}.csv", inAccNum);
-            wasCreated = true;
             }
         catch (IOException e)
             {
-            wasCreated = false;
+            LCX.systemLog.log(Level.SEVERE, "Failed to create new account. Check database log for details.{0}", e.toString());
+            dbLog.log(Level.SEVERE, "Failed to create new account file: {0} with name: {1}", new Object[]{inAccNum, inName});
             }
-        return wasCreated;
         }
 
     public boolean transfer(String inFrom, String inTo, String inAmount)
@@ -127,7 +130,7 @@ public class DatabaseInterface
             });
         boolean didTransfer = false;
 
-        String fromStartLatinum = readFileLine(inFrom, 3);
+        String fromStartLatinum = readFileLine(inFrom,LATINUM_POS);
 
         System.out.println("Transfer From Account: " + inFrom + " had: " + fromStartLatinum);
 
@@ -140,24 +143,24 @@ public class DatabaseInterface
         fromLatinum = fromLatinum.subtract(fee);
         System.out.println("Transfer From Account: " + inFrom + " now has: " + fromLatinum.toPlainString());
 
-        String toStartLatinum = readFileLine(inTo, 3);
+        String toStartLatinum = readFileLine(inTo, LATINUM_POS);
         System.out.println("Transfer To Account: " + inTo + " had: " + toStartLatinum);
         BigDecimal toLatinum = new BigDecimal(toStartLatinum);
         toLatinum = toLatinum.add(amount);
         System.out.println("Transfer To Account: " + inTo + " now has: " + toLatinum.toPlainString());
 
-        String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER , 3);
+        String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER , LATINUM_POS);
         System.out.println("Bank Account had: " + bankStartLatinum);
         BigDecimal bankLatinum = new BigDecimal(bankStartLatinum);
         bankLatinum = bankLatinum.add(fee);
         System.out.println("Bank Account now has: " + bankLatinum.toPlainString());
 
         System.out.println("Writing 'Transfer From' Account");
-        overwriteLine(inFrom, 3, fromLatinum.toPlainString());
+        overwriteLine(inFrom, LATINUM_POS, fromLatinum.toPlainString());
         System.out.println("Writing 'Transfer To' Account");
-        overwriteLine(inTo, 3, toLatinum.toPlainString());
+        overwriteLine(inTo, LATINUM_POS, toLatinum.toPlainString());
         System.out.println("Writing Bank Account");
-        overwriteLine(LCX_FEE_ACCOUNT_NUMBER, 3, bankLatinum.toPlainString());
+        overwriteLine(LCX_FEE_ACCOUNT_NUMBER, LATINUM_POS, bankLatinum.toPlainString());
 
         return true;
         }
@@ -172,6 +175,7 @@ public class DatabaseInterface
     */
     private String newAccountNumber()
         {
+            
         String newAccountNum;
         do {
           newAccountNum = Integer.toString(ThreadLocalRandom.current().nextInt(100000, 999999));
@@ -213,12 +217,12 @@ public class DatabaseInterface
     
     public void writeName(String inAcc, String inName)
         {
-        overwriteLine(inAcc, 2, inName);
+        overwriteLine(inAcc, NAME_POS, inName);
         }
 
     public void writeLatinum(String inAcc, String inLatinum)
         {
-        overwriteLine(inAcc, 3, inLatinum);
+        overwriteLine(inAcc, LATINUM_POS, inLatinum);
         }
 
     public void writeLatinum(String inAcc, BigDecimal inLatinum)
@@ -228,12 +232,12 @@ public class DatabaseInterface
 
     public void writePassword(String inAcc, String inPassword)
         {
-        overwriteLine(inAcc, 1, inPassword);
+        overwriteLine(inAcc, PASSWORD_POS, inPassword);
         }
 
     public String readName(String inAcc)
         {
-        String name = readFileLine(inAcc, 2);
+        String name = readFileLine(inAcc, NAME_POS);
         return name;
         }
 
