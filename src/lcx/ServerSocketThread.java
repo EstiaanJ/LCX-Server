@@ -178,6 +178,7 @@ public class ServerSocketThread implements Runnable
     private Message generateReply(Message inMsg)
         {
         //The cases of login, logout and conneciton close requests should already be handled before this method is called.
+        //Also, if we're at this method, then the client has a valid authentication token.
 
         String authToken = inMsg.getAuthToken();
         if (!sessions.containsKey(authToken))
@@ -185,6 +186,8 @@ public class ServerSocketThread implements Runnable
             return null;
             }
         String accountNum = sessions.get(authToken);
+        
+        String[] data = inMsg.getData();
 
         switch (inMsg.getHead())
             {
@@ -194,6 +197,15 @@ public class ServerSocketThread implements Runnable
                 {
                 balance
                 }, null);
+        case TRANSFER_REQUEST:
+            Message reply;
+            if (LCX.databaseIF.transfer(accountNum, data[0], data[1])) {
+                reply = new Message(MessageHeaders.TRANSFER_RECEIPT_SUCCESS,PROTOCOL_VERSION,new String[0],null);
+            } else {
+                reply = new Message(MessageHeaders.TRANSFER_RECEIPT_FAIL,PROTOCOL_VERSION,new String[0],null);
+            }
+            return reply;
+            
         default:
             return null;
             }
