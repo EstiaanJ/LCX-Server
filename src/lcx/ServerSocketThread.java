@@ -81,38 +81,55 @@ public class ServerSocketThread implements Runnable
             
             while (!inMsg.getHead().equals(MessageHeaders.CONNECTION_CLOSE_REQUEST)) {
             
-            try {
-                inMsg = messageHandler.receive();
+                try {
+                    inMsg = messageHandler.receive();
 
-                //If a user is logging in, then we need to do some variable management.
-                switch (inMsg.getHead()) {
-                    case LOGIN_REQUEST:
-                        //This simply checks whether the credentials are valid or not.
-                        if (LCX.databaseIF.login(inMsg.getData()[0], inMsg.getData()[1])) {
-                            String guid = genGUID();
-                            sessions.put(guid, inMsg.getData()[0]);
-                            messageHandler.send(new Message(MessageHeaders.AUTH_TOKEN_ISSUE, PROTOCOL_VERSION, new String[]{guid}, null));
-                        } else {
-                            messageHandler.send(new Message(MessageHeaders.LOGIN_FAIL_RECEIPT, PROTOCOL_VERSION, new String[0], null));
+                    //If a user is doing anything but logging in, we need to check that their token is still valid.
+                    //If the client submitted a non-empty token but that token is not a recognised session, then we need to tell them this.
+                    if (!inMsg.getHead().equals(MessageHeaders.LOGIN_REQUEST)) {
+                        if (!inMsg.getAuthToken().equals("")) {
+                            String token = inMsg.getAuthToken();
+                            if (!sessions.containsKey(token)) {
+                                messageHandler.send(new Message(MessageHeaders.SESSION_EXPIRED_NOTIFY, PROTOCOL_VERSION,new String[0],null));
+                                continue;
+                            }
                         }
-                        break;
-                    //Nothing bad will happen if people don't log out, but doing so will destroy the token.
-                    case LOGOUT_REQUEST:
-                        sessions.remove(inMsg.getAuthToken());
-                        messageHandler.send(new Message(MessageHeaders.LOGOUT_CONFIRMED,PROTOCOL_VERSION,new String[0],null));
-                        break;
-                    default:
-                        Message m = generateReply(inMsg);
-                        if (m != null)
-                            messageHandler.send(generateReply(inMsg));
+                    }
+
+
+                    switch (inMsg.getHead()) {
+                        case LOGIN_REQUEST:                        
+                            //Using the LCXDelegate class, a login request should never be made with a non-empty token.
+                            assert(inMsg.getAuthToken().equals(""));
+
+                            //This simply checks whether the credentials are valid or not.
+                            if (LCX.databaseIF.login(inMsg.getData()[0], inMsg.getData()[1])) {
+                                String guid = genGUID();
+                                sessions.put(guid, inMsg.getData()[0]);
+                                messageHandler.send(new Message(MessageHeaders.AUTH_TOKEN_ISSUE, PROTOCOL_VERSION, new String[]{guid}, null));
+                            } else {
+                                messageHandler.send(new Message(MessageHeaders.LOGIN_FAIL_RECEIPT, PROTOCOL_VERSION, new String[0], null));
+                            }
+                            break;
+                        //Nothing bad will happen if people don't log out, but doing so will destroy the token.
+                        case LOGOUT_REQUEST:
+                            sessions.remove(inMsg.getAuthToken());
+                            messageHandler.send(new Message(MessageHeaders.LOGOUT_CONFIRMED,PROTOCOL_VERSION,new String[0],null));
+                            break;
+                        default:
+                            Message m = generateReply(inMsg);
+                            if (m != null)
+                                messageHandler.send(generateReply(inMsg));
+                    }
+
+                } catch (EOFException e) {
+                    //This end-of-field exception means that the socket has been closed.
+                    //So we should just end the thread safely by letting it run its course.
+                    closeConnection();
+                    break;
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                
-            } catch (EOFException e) {
-                //This end-of-field exception means that the socket has been closed.
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             
             }
             
