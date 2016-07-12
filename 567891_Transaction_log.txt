@@ -1,4 +1,0 @@
-Jul 08, 2016 4:44:44 PM lcx.ClientWorker waitForCommand
-INFO: [TRANSFER OUT]: Transfering: 3 Transfering to: 567892
-Jul 08, 2016 4:44:44 PM lcx.ClientWorker waitForCommand
-INFO: [TRANSFER REPORT]: Transfer Complete. Account now has: 6.997
