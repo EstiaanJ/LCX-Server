@@ -72,9 +72,6 @@ public class ServerSocketThread implements Runnable
     private void processMessages()
         {
             
-            //Now we're awaiting a "Message" object to be sent, so we should open
-            //an ObjectInputStream on the socket.
-            
             Message inMsg = new Message(MessageHeaders.NO_MESSAGE,PROTOCOL_VERSION,new String[0],"");
             
             while (!inMsg.getHead().equals(MessageHeaders.CONNECTION_CLOSE_REQUEST)) {
@@ -83,10 +80,10 @@ public class ServerSocketThread implements Runnable
                     inMsg = messageHandler.receive();
 
                     if (inMsg.getHead().equals(MessageHeaders.NEW_ACCOUNT_REQUEST)) {
-                        String accNum = inMsg.getData()[0];
-                        String name = inMsg.getData()[2];
-                        String pass = inMsg.getData()[2];
-                        LCX.databaseIF.createNewAccount(accNum,name,pass);
+                        String name = inMsg.getData()[0];
+                        String pass = inMsg.getData()[1];
+                        String accNum = LCX.databaseIF.createNewAccount(name,pass);
+                        messageHandler.send(new Message(MessageHeaders.NEW_ACCOUNT_RECEIPT,PROTOCOL_VERSION,new String[]{accNum},null));
                         continue;
                     }
                     

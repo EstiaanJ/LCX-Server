@@ -12,6 +12,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,9 +47,17 @@ public class DatabaseInterface
 
     public DatabaseInterface()
         {
+            if(!Files.exists(Paths.get(DB_DIR))) {
+                File dir = new File(DB_DIR);
+                dir.mkdir();
+            }
+            if(!Files.exists(Paths.get(DB_LOG_DIR))) {
+                File dir = new File(DB_LOG_DIR);
+                dir.mkdir();
+            }
         try
             {
-            fh = new FileHandler(DB_LOG_DIR + "databaseLog" + LocalDateTime.now().toString() + ".txt");
+            fh = new FileHandler(DB_LOG_DIR + "databaseLog-" + LocalDateTime.now().toString().replace(":", "-") + ".txt");
             }
         catch(IOException e)
             {
@@ -84,7 +94,7 @@ public class DatabaseInterface
             return newNum;
         }
     
-    public void createNewAccount(String inAccNum, String inName, String inPass)
+    private void createNewAccount(String inAccNum, String inName, String inPass)
         {
         dbLog.log(Level.FINE, "Server requested for a new account to be created with Account Number: {0} With Name: {1}", new Object[]
             {
