@@ -156,10 +156,13 @@ public class DatabaseInterface
         }
     
     /**
-    *This method will safley close the database.
-    * At the moment that means saving the database log.
+    *Request a new account number, for a new account, from the database.
+    * This method will randomly generate a new account number between 100 000 and 999 999
+    * and then check if a file name with that number already exists. If not it will return
+    * the generated number as a string. If it does then it will call newAccountNumber(),
+    * and whatever that method returns will be the new account number.
     *
-    * @param flag the status flag
+    * @return a String unique and unused account number.
     */
     public String newAccountNumber()
         {
@@ -167,7 +170,7 @@ public class DatabaseInterface
         File f = new File(newAccountNum + ".csv");
         if (f.exists())
             {
-            newAccountNumber();
+            newAccountNum = newAccountNumber();
             }
         return newAccountNum;
         }
