@@ -12,9 +12,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import shared.UserAccount;
@@ -27,8 +29,9 @@ public class DatabaseInterface
     {
 
     private final static String DB_DIR = "database" + File.separator;
+    private final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
     private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
-    ;
+    private static FileHandler fh;
     private FileWriter accountWriter;
     private BufferedWriter accountWriteBuffer;
     private FileReader accountReader;
@@ -37,6 +40,25 @@ public class DatabaseInterface
 
     public DatabaseInterface()
         {
+        try
+            {
+            fh = new FileHandler(DB_LOG_DIR + "databaseLog" + LocalDateTime.now().toString() + ".txt");
+            }
+        catch(IOException e)
+            {
+            e.printStackTrace();
+            }
+        }
+    
+    public void close(int inFlag)
+        {
+        dbLog.log(Level.INFO, "The server has requested the database to close with the flag: {0}", inFlag);
+        fh.close();
+        }
+    
+    public void close()
+        {
+        close(0);
         }
 
     //***************************** Setters | Standard OO stuff **********************************
@@ -336,7 +358,7 @@ public class DatabaseInterface
 
     private File[] ls(String inDir)
         {
-        File folder = new File("your/path");
+        File folder = new File(DB_DIR);
         File[] listOfFiles = folder.listFiles();
 
         for (int i = 0; i < listOfFiles.length; i++)
@@ -345,9 +367,12 @@ public class DatabaseInterface
                 {
                 System.out.println("File " + listOfFiles[i].getName());
                 }
-            else if (listOfFiles[i].isDirectory())
+            else
                 {
-                System.out.println("Directory " + listOfFiles[i].getName());
+                if (listOfFiles[i].isDirectory())
+                    {
+                    System.out.println("Directory " + listOfFiles[i].getName());
+                    }
                 }
             }
         return listOfFiles;
