@@ -72,9 +72,11 @@ public class DatabaseInterface
         return validLogin;
         }
     
-    public boolean createNewAccount(String inName, String inPass)
+    public String createNewAccount(String inName, String inPass)
         {
-        return createNewAccount(newAccountNumber(),inName,inPass);
+            String newNum = newAccountNumber();
+            createNewAccount(newNum,inName,inPass);
+            return newNum;
         }
     
     public boolean createNewAccount(String inAccNum, String inName, String inPass)
@@ -163,23 +165,27 @@ public class DatabaseInterface
     /**
     *Request a new account number, for a new account, from the database.
     * This method will randomly generate a new account number between 100 000 and 999 999
-    * and then check if a file name with that number already exists. If not it will return
-    * the generated number as a string. If it does then it will call newAccountNumber(),
-    * and whatever that method returns will be the new account number.
+    * and then check if an account with that number already exists. If not, it will return
+    * the generated number as a string. If it does, then it will generate another ad infinitum.
     *
     * @return a String unique and unused account number.
     */
-    public String newAccountNumber()
+    private String newAccountNumber()
         {
-        String newAccountNum = Integer.toString(ThreadLocalRandom.current().nextInt(100000, 999999));
-        File f = new File(newAccountNum + ".csv");
-        if (f.exists())
-            {
-            newAccountNum = newAccountNumber();
-            }
+        String newAccountNum;
+        do {
+          newAccountNum = Integer.toString(ThreadLocalRandom.current().nextInt(100000, 999999));
+        } while(accountNumberExists(newAccountNum));
+            
         return newAccountNum;
+        
         }
 
+    private boolean accountNumberExists(String an) {
+        return (
+                (new File(an + ".csv")).exists() || an.equals(LCX_FEE_ACCOUNT_NUMBER)
+                );
+    }
     //***************************** Server Direct Interface Methods | High Level stuff **********************************
     
     /**
