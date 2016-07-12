@@ -336,7 +336,7 @@ public class DatabaseInterface
 
     private File[] ls(String inDir)
         {
-        File folder = new File("your/path");
+        File folder = new File("your" + File.separator + "path");
         File[] listOfFiles = folder.listFiles();
 
         for (int i = 0; i < listOfFiles.length; i++)
