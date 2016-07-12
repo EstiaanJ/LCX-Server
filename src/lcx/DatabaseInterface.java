@@ -56,7 +56,7 @@ public class DatabaseInterface
                 dir.mkdir();
             }
             
-            if (!(new File(LCX_FEE_ACCOUNT_NUMBER + ".csv")).exists()) {
+            if (!(accountNumberExists(LCX_FEE_ACCOUNT_NUMBER))) {
                 createNewAccount(LCX_FEE_ACCOUNT_NUMBER,"LCX","terella");
             }
             
@@ -148,11 +148,11 @@ public class DatabaseInterface
             inFrom, inTo, inAmount
             });
         boolean didTransfer = false;
-
+        
         String fromStartLatinum = readFileLine(inFrom,LATINUM_POS);
-
+        
         System.out.println("Transfer From Account: " + inFrom + " had: " + fromStartLatinum);
-
+        
         BigDecimal fromLatinum = new BigDecimal(fromStartLatinum);
         BigDecimal amount = new BigDecimal(inAmount);
         BigDecimal fee = new BigDecimal(amount.toPlainString());
@@ -161,26 +161,26 @@ public class DatabaseInterface
         fromLatinum = fromLatinum.subtract(amount);
         fromLatinum = fromLatinum.subtract(fee);
         System.out.println("Transfer From Account: " + inFrom + " now has: " + fromLatinum.toPlainString());
-
+        
         String toStartLatinum = readFileLine(inTo, LATINUM_POS);
         System.out.println("Transfer To Account: " + inTo + " had: " + toStartLatinum);
         BigDecimal toLatinum = new BigDecimal(toStartLatinum);
         toLatinum = toLatinum.add(amount);
         System.out.println("Transfer To Account: " + inTo + " now has: " + toLatinum.toPlainString());
-
+        
         String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER , LATINUM_POS);
         System.out.println("Bank Account had: " + bankStartLatinum);
         BigDecimal bankLatinum = new BigDecimal(bankStartLatinum);
         bankLatinum = bankLatinum.add(fee);
         System.out.println("Bank Account now has: " + bankLatinum.toPlainString());
-
+        
         System.out.println("Writing 'Transfer From' Account");
         overwriteLine(inFrom, LATINUM_POS, fromLatinum.toPlainString());
         System.out.println("Writing 'Transfer To' Account");
         overwriteLine(inTo, LATINUM_POS, toLatinum.toPlainString());
         System.out.println("Writing Bank Account");
         overwriteLine(LCX_FEE_ACCOUNT_NUMBER, LATINUM_POS, bankLatinum.toPlainString());
-
+        
         return true;
         }
     
@@ -206,7 +206,7 @@ public class DatabaseInterface
 
     private boolean accountNumberExists(String an) {
         return (
-                (new File(an + ".csv")).exists() || an.equals(LCX_FEE_ACCOUNT_NUMBER)
+                (new File(DB_DIR + an + ".csv")).exists()
                 );
     }
     //***************************** Server Direct Interface Methods | High Level stuff **********************************
@@ -394,13 +394,14 @@ public class DatabaseInterface
             }
         }
 
-    private String readFileLine(String inFileName, int pos)
+    private String readFileLine(String inAccountNumber, int pos)
         {
         String line = "ERROR";
+        
         try
             {
-            dbLog.log(Level.FINEST, "Opening {0} as readOnly", inFileName);
-            accountReader = new FileReader(DB_DIR + inFileName + ".csv");
+            dbLog.log(Level.FINEST, "Opening {0} as readOnly", inAccountNumber);
+            accountReader = new FileReader(DB_DIR + inAccountNumber + ".csv");
             accountReadBuffer = new BufferedReader(accountReader);
             for (int i = 0; i < pos + 1; i++) //0) Account number, 1) password, 2) name, 3) latinum
                 {
@@ -417,7 +418,7 @@ public class DatabaseInterface
             {
             dbLog.log(Level.SEVERE, "Failed to read file line: {0} In file: {1}", new Object[]
                 {
-                pos, inFileName
+                pos, inAccountNumber
                 });
             }
         return line;
