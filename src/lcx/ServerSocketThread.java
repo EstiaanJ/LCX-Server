@@ -5,10 +5,8 @@
  */
 package lcx;
 
-import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,6 +82,14 @@ public class ServerSocketThread implements Runnable
                 try {
                     inMsg = messageHandler.receive();
 
+                    if (inMsg.getHead().equals(MessageHeaders.NEW_ACCOUNT_REQUEST)) {
+                        String accNum = inMsg.getData()[0];
+                        String name = inMsg.getData()[2];
+                        String pass = inMsg.getData()[2];
+                        LCX.databaseIF.createNewAccount(accNum,name,pass);
+                        continue;
+                    }
+                    
                     //If a user is doing anything but logging in, we need to check that their token is still valid.
                     //If the client submitted a non-empty token but that token is not a recognised session, then we need to tell them this.
                     if (!inMsg.getHead().equals(MessageHeaders.LOGIN_REQUEST)) {

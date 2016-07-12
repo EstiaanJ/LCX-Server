@@ -192,6 +192,7 @@ public class DatabaseInterface
             if (inName.equals(name))
                 {
                 acc = allAccountNumbers[i];
+                break;
                 }
             }
         return acc;
