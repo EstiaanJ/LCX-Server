@@ -29,13 +29,13 @@ import shared.UserAccount;
  */
 public class DatabaseInterface
     {
-    private final static String DB_DIR = "database" + File.separator;
-    private final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
-    private final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
-    private final static int ACCOUNT_NUM_POS = 0;
-    private final static int PASSWORD_POS = 1;
-    private final static int NAME_POS = 2;
-    private final static int LATINUM_POS = 3;
+    public final static String DB_DIR = "database" + File.separator;
+    public final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
+    public final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
+    public final static int ACCOUNT_NUM_POS = 0;
+    public final static int PASSWORD_POS = 1;
+    public final static int NAME_POS = 2;
+    public final static int LATINUM_POS = 3;
     private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
     private static FileHandler fh;
     private FileWriter accountWriter;
