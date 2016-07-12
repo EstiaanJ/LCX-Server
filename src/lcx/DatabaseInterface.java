@@ -55,6 +55,11 @@ public class DatabaseInterface
                 File dir = new File(DB_LOG_DIR);
                 dir.mkdir();
             }
+            
+            if (!(new File(LCX_FEE_ACCOUNT_NUMBER + ".csv")).exists()) {
+                createNewAccount(LCX_FEE_ACCOUNT_NUMBER,"LCX","terella");
+            }
+            
         try
             {
             fh = new FileHandler(DB_LOG_DIR + "databaseLog-" + LocalDateTime.now().toString().replace(":", "-") + ".txt");
@@ -134,6 +139,10 @@ public class DatabaseInterface
 
     public boolean transfer(String inFrom, String inTo, String inAmount)
         {
+            if (!accountNumberExists(inFrom) || !accountNumberExists(inTo)) {
+                return false;
+            }
+            
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
             {
             inFrom, inTo, inAmount
@@ -279,7 +288,7 @@ public class DatabaseInterface
 
     public BigDecimal readLatinum(String inAcc)
         {
-        BigDecimal money = new BigDecimal(readFileLine(inAcc, 3));
+        BigDecimal money = new BigDecimal(readFileLine(inAcc, LATINUM_POS));
         return money;
         }
 
