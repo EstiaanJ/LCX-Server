@@ -112,6 +112,9 @@ public class ServerSocketThread implements Runnable
                             }
                             break;
                         //Nothing bad will happen if people don't log out, but doing so will destroy the token.
+                        case PING:
+                            messageHandler.send(new Message(MessageHeaders.PONG,PROTOCOL_VERSION,new String[0],null));
+                            break;
                         case LOGOUT_REQUEST:
                             sessions.remove(inMsg.getAuthToken());
                             messageHandler.send(new Message(MessageHeaders.LOGOUT_CONFIRMED,PROTOCOL_VERSION,new String[0],null));
