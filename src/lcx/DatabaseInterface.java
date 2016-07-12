@@ -26,7 +26,7 @@ import shared.UserAccount;
 public class DatabaseInterface
     {
 
-    private final static String DB_DIR = "database/";
+    private final static String DB_DIR = "database" + File.separator;
     private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
     ;
     private FileWriter accountWriter;
