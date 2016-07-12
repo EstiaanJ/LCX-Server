@@ -50,16 +50,7 @@ public class DatabaseInterface
             }
         }
     
-    public void close(int inFlag)
-        {
-        dbLog.log(Level.INFO, "The server has requested the database to close with the flag: {0}", inFlag);
-        fh.close();
-        }
     
-    public void close()
-        {
-        close(0);
-        }
 
     //***************************** Setters | Standard OO stuff **********************************
     //***************************** Getters | Standard OO stuff **********************************
@@ -163,7 +154,13 @@ public class DatabaseInterface
 
         return true;
         }
-
+    
+    /**
+    *This method will safley close the database.
+    * At the moment that means saving the database log.
+    *
+    * @param flag the status flag
+    */
     public String newAccountNumber()
         {
         String newAccountNum = Integer.toString(ThreadLocalRandom.current().nextInt(100000, 999999));
@@ -176,6 +173,30 @@ public class DatabaseInterface
         }
 
     //***************************** Server Direct Interface Methods | High Level stuff **********************************
+    
+    /**
+    *Safley close the database after writing a status flag to the log.
+    * At the moment that means saving the database log.
+    *
+    * @param flag the status flag
+    */
+    public void close(int flag)
+        {
+        dbLog.log(Level.INFO, "The server has requested the database to close with the flag: {0}", flag);
+        fh.close();
+        }    
+    
+    /**
+    *Safley close the database with the status flag 0.
+    * At the moment that means saving the database log.
+    *
+    * @param flag the status flag
+    */
+    public void close()
+        {
+        close(0);
+        }
+    
     public void writeName(String inAcc, String inName)
         {
         overwriteLine(inAcc, 2, inName);
@@ -202,9 +223,17 @@ public class DatabaseInterface
         return name;
         }
 
+    
+    /**
+    *Return a specific account number when given a username.
+    *If no account is found with the provided username, it will return "000000".
+    *
+    * @param inName the username of the account to be seached for.
+    * @return a string, the last account number it scans that matches the inName argument, or "000000" if no match is found.
+    */
     public String readAcc(String inName)
         {
-        String acc = "123456";
+        String acc = "000000";
         File[] allAccounts = ls(DB_DIR);
         String[] allAccountNumbers = new String[allAccounts.length];
         for (int i = 0; i < allAccounts.length; i++)
