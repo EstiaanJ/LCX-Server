@@ -12,9 +12,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import shared.UserAccount;
@@ -25,10 +27,11 @@ import shared.UserAccount;
  */
 public class DatabaseInterface
     {
-
     private final static String DB_DIR = "database" + File.separator;
+    private final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
+    private final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
     private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
-    ;
+    private static FileHandler fh;
     private FileWriter accountWriter;
     private BufferedWriter accountWriteBuffer;
     private FileReader accountReader;
@@ -37,7 +40,17 @@ public class DatabaseInterface
 
     public DatabaseInterface()
         {
+        try
+            {
+            fh = new FileHandler(DB_LOG_DIR + "databaseLog" + LocalDateTime.now().toString() + ".txt");
+            }
+        catch(IOException e)
+            {
+            e.printStackTrace();
+            }
         }
+    
+    
 
     //***************************** Setters | Standard OO stuff **********************************
     //***************************** Getters | Standard OO stuff **********************************
@@ -58,7 +71,12 @@ public class DatabaseInterface
             }
         return validLogin;
         }
-
+    
+    public boolean createNewAccount(String inName, String inPass)
+        {
+        return createNewAccount(newAccountNumber(),inName,inPass);
+        }
+    
     public boolean createNewAccount(String inAccNum, String inName, String inPass)
         {
         boolean wasCreated = false;
@@ -126,7 +144,7 @@ public class DatabaseInterface
         toLatinum = toLatinum.add(amount);
         System.out.println("Transfer To Account: " + inTo + " now has: " + toLatinum.toPlainString());
 
-        String bankStartLatinum = readFileLine("816192", 3);
+        String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER , 3);
         System.out.println("Bank Account had: " + bankStartLatinum);
         BigDecimal bankLatinum = new BigDecimal(bankStartLatinum);
         bankLatinum = bankLatinum.add(fee);
@@ -137,23 +155,56 @@ public class DatabaseInterface
         System.out.println("Writing 'Transfer To' Account");
         overwriteLine(inTo, 3, toLatinum.toPlainString());
         System.out.println("Writing Bank Account");
-        overwriteLine("816192", 3, bankLatinum.toPlainString());
+        overwriteLine(LCX_FEE_ACCOUNT_NUMBER, 3, bankLatinum.toPlainString());
 
         return true;
         }
-
+    
+    /**
+    *Request a new account number, for a new account, from the database.
+    * This method will randomly generate a new account number between 100 000 and 999 999
+    * and then check if a file name with that number already exists. If not it will return
+    * the generated number as a string. If it does then it will call newAccountNumber(),
+    * and whatever that method returns will be the new account number.
+    *
+    * @return a String unique and unused account number.
+    */
     public String newAccountNumber()
         {
         String newAccountNum = Integer.toString(ThreadLocalRandom.current().nextInt(100000, 999999));
         File f = new File(newAccountNum + ".csv");
         if (f.exists())
             {
-            newAccountNumber();
+            newAccountNum = newAccountNumber();
             }
         return newAccountNum;
         }
 
     //***************************** Server Direct Interface Methods | High Level stuff **********************************
+    
+    /**
+    *safely close the database after writing a status flag to the log.
+    * At the moment that means saving the database log.
+    *
+    * @param flag the status flag
+    */
+    public void close(int flag)
+        {
+        dbLog.log(Level.INFO, "The server has requested the database to close with the flag: {0}", flag);
+        fh.close();
+        }    
+    
+    /**
+    *Safely close the database with the status flag 0.
+    * At the moment that means saving the database log.
+    *
+    * @param flag the status flag
+    */
+    public void close()
+        {
+        close(0);
+        }
+    
     public void writeName(String inAcc, String inName)
         {
         overwriteLine(inAcc, 2, inName);
@@ -180,9 +231,17 @@ public class DatabaseInterface
         return name;
         }
 
+    
+    /**
+    *Return a specific account number when given a username.
+    *If no account is found with the provided username, it will return "000000".
+    *
+    * @param inName the username of the account to be seached for.
+    * @return a string, the last account number it scans that matches the inName argument, or "000000" if no match is found.
+    */
     public String readAcc(String inName)
         {
-        String acc = "123456";
+        String acc = "000000";
         File[] allAccounts = ls(DB_DIR);
         String[] allAccountNumbers = new String[allAccounts.length];
         for (int i = 0; i < allAccounts.length; i++)
@@ -337,7 +396,7 @@ public class DatabaseInterface
 
     private File[] ls(String inDir)
         {
-        File folder = new File("your" + File.separator + "path");
+        File folder = new File(DB_DIR);
         File[] listOfFiles = folder.listFiles();
 
         for (int i = 0; i < listOfFiles.length; i++)
@@ -346,9 +405,12 @@ public class DatabaseInterface
                 {
                 System.out.println("File " + listOfFiles[i].getName());
                 }
-            else if (listOfFiles[i].isDirectory())
+            else
                 {
-                System.out.println("Directory " + listOfFiles[i].getName());
+                if (listOfFiles[i].isDirectory())
+                    {
+                    System.out.println("Directory " + listOfFiles[i].getName());
+                    }
                 }
             }
         return listOfFiles;

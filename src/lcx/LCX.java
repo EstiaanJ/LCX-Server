@@ -22,12 +22,9 @@ public class LCX extends Thread
     private final static int PORT = 2388;
     private ServerSocket serverSocket;
     private final static int STD_TIMEOUT = 5;
-
-    
             
     public LCX() throws IOException
         {
-
         }
     
     @Override
