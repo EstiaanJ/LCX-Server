@@ -162,9 +162,11 @@ public class ServerSocketThread implements Runnable
         {
         try
             {
-            clientSocket.getInputStream().close();
-            clientSocket.getOutputStream().close();
-            clientSocket.close();
+            if(!clientSocket.isClosed()) {
+                clientSocket.close();
+                //clientSocket.getInputStream().close();
+                //clientSocket.getOutputStream().close();
+            }
             }
         catch (IOException e)
             {
