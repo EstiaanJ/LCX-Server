@@ -155,6 +155,8 @@ public class ServerSocketThread implements Runnable
                 }
 
             }
+            
+            closeConnection();
 
         }
 
