@@ -145,7 +145,6 @@ public class ServerSocketThread implements Runnable
                 {
                 //This end-of-field exception means that the socket has been closed.
                 //So we should just end the thread safely by letting it run its course.
-                closeConnection();
                 break;
                 }
             catch (IOException e)
