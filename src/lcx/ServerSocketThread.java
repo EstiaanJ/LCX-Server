@@ -68,7 +68,7 @@ public class ServerSocketThread implements Runnable
          */
         LCX.systemLog.log(Level.FINE, "Waiting for request from client...");
         processMessages();
-        closeConnection();
+       closeConnection();
         }
 
     private void processMessages()
@@ -155,8 +155,6 @@ public class ServerSocketThread implements Runnable
                 }
 
             }
-            
-            closeConnection();
 
         }
 
