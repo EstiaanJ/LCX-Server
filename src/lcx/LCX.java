@@ -21,12 +21,16 @@ import static lcx.DatabaseInterface.DB_LOG_DIR;
  */
 public class LCX extends Thread
     {
+    
+    private static final String SERVER_VERSION = "0.2";
+    
     public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
     public static FileHandler fileHandler;
     public static DatabaseInterface databaseIF;
     private final static int PORT = 2388;
     private ServerSocket serverSocket;
     private final static int STD_TIMEOUT = 5;
+    
             
     public LCX() throws IOException
         {
@@ -35,6 +39,7 @@ public class LCX extends Thread
     @Override
     public void run()
         {
+         
         listenSocket();
         }
     
@@ -99,6 +104,8 @@ public class LCX extends Thread
             {
             Thread listeningThread = new LCX();
             listeningThread.start();
+            systemLog.log(Level.CONFIG, "Server running. Version: " + SERVER_VERSION);
+            systemLog.log(Level.CONFIG, "Communication protocol version: " + ServerSocketThread.PROTOCOL_VERSION);
             }
         catch(IOException e)
             {

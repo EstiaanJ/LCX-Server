@@ -23,8 +23,7 @@ public class ServerSocketThread implements Runnable
 //A thread and object of this class only ever deals with one client program instance (if the user closes the client program, the thread it used will expire)
     {
 
-    private static final String PROTOCOL_VERSION = "0.1";
-    private static final String SERVER_VERSION = "0.2";
+    public static final String PROTOCOL_VERSION = "0.1";
 
     private final Socket clientSocket;
     private MessageHandler messageHandler;
