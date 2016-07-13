@@ -89,7 +89,7 @@ public class DatabaseInterface
         {
         dbLog.log(Level.FINE, "Server requested login for Account: {0}", inAcc);
         boolean validLogin = false;
-        String actualPass = readFileLine(inAcc, 1);
+        String actualPass = readFileLine(inAcc, PASSWORD_POS);
         if (inPass.equals(actualPass))
             {
             dbLog.log(Level.FINE, "Passwords Matched");
@@ -161,7 +161,6 @@ public class DatabaseInterface
             {
             inFrom, inTo, inAmount
             });
-        boolean didTransfer = false;
 
         String fromStartLatinum = readFileLine(inFrom, LATINUM_POS);
 
@@ -171,6 +170,16 @@ public class DatabaseInterface
         BigDecimal amount = new BigDecimal(inAmount);
         BigDecimal fee = new BigDecimal(amount.toPlainString());
         fee = fee.multiply(new BigDecimal("0.001"));
+        
+//Check if the "from account" has enough funs.
+        BigDecimal totalSubtraction = fee.add(amount);
+        BigDecimal totalLatinumAfterTransfer = fromLatinum.subtract(totalSubtraction);
+        if(totalLatinumAfterTransfer.signum() == -1)
+            {
+            return false;
+            }
+        
+        
         System.out.println("Fee is: " + fee.toPlainString());
         fromLatinum = fromLatinum.subtract(amount);
         fromLatinum = fromLatinum.subtract(fee);
@@ -181,7 +190,7 @@ public class DatabaseInterface
         BigDecimal toLatinum = new BigDecimal(toStartLatinum);
         toLatinum = toLatinum.add(amount);
         System.out.println("Transfer To Account: " + inTo + " now has: " + toLatinum.toPlainString());
-
+        
         String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER, LATINUM_POS);
         System.out.println("Bank Account had: " + bankStartLatinum);
         BigDecimal bankLatinum = new BigDecimal(bankStartLatinum);
@@ -360,22 +369,22 @@ public class DatabaseInterface
                 allLines.add(line);
                 }
 
-            dbLog.log(Level.FINEST, "Removing line: {0} Line used to be: {1}", new Object[]
+            dbLog.log(Level.FINEST, "Removing line (in memory): {0} Line used to be: {1}", new Object[]
                 {
                 pos, allLines.get(pos)
                 });
             allLines.remove(pos);
-            dbLog.log(Level.FINEST, "Adding line: {0} to position: {1}", new Object[]
+            dbLog.log(Level.FINEST, "Adding line (in memory): {0} to position: {1}", new Object[]
                 {
                 inLine, pos
                 });
             allLines.add(pos, inLine);
 
-            dbLog.log(Level.FINEST, "Closing file");
+            dbLog.log(Level.FINEST, "Closing readonly file");
             accountReadBuffer.close();
             accountReader.close();
 
-            dbLog.log(Level.FINEST, "Opening file: " + inFileName);
+            dbLog.log(Level.FINEST, "Opening file to write: {0}", inFileName);
             accountWriter = new FileWriter(DB_DIR + inFileName + ".csv");
             accountWriteBuffer = new BufferedWriter(accountWriter);
 
@@ -386,12 +395,12 @@ public class DatabaseInterface
                     {
                     accountWriteBuffer.write(System.lineSeparator());
                     }
-                dbLog.log(Level.FINEST, "Writing to memory: {0}at position: {1}", new Object[]
+                dbLog.log(Level.FINEST, "Reading to memory: {0} at position: {1}", new Object[]
                     {
                     allLines.get(i), i
                     }); //This could be overkill
                 }
-            dbLog.log(Level.FINEST, "Writing all changes to file.");
+            dbLog.log(Level.FINEST, "Writing all changes to file. Overwrite Complete.");
             accountWriteBuffer.close();
             accountWriter.close();
             }
