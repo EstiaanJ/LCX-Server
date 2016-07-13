@@ -156,7 +156,10 @@ public class DatabaseInterface
             {
             return false;
             }
-
+        if(inFrom.equals(inTo))
+            {
+            return false;
+            }
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
             {
             inFrom, inTo, inAmount
