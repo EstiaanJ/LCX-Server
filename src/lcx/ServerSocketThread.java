@@ -76,7 +76,7 @@ public class ServerSocketThread implements Runnable
             
             Message inMsg = new Message(MessageHeaders.NO_MESSAGE,PROTOCOL_VERSION,new String[0],"");
             
-            while (!inMsg.getHead().equals(MessageHeaders.CONNECTION_CLOSE_REQUEST)) {
+            while (!inMsg.getHead().equals(MessageHeaders.CONNECTION_CLOSE)) {
             
                 try {
                     inMsg = messageHandler.receive();
