@@ -93,6 +93,8 @@ public class LCX extends Thread
             SimpleFormatter formatter = new SimpleFormatter();
             fileHandler.setFormatter(formatter);
             systemLog.setLevel(Level.ALL);
+            systemLog.log(Level.INFO, "Server running. Version: " + SERVER_VERSION);
+            systemLog.log(Level.INFO, "Communication protocol version: " + ServerSocketThread.PROTOCOL_VERSION);
             }
         catch (IOException e)
             {
@@ -104,8 +106,6 @@ public class LCX extends Thread
             {
             Thread listeningThread = new LCX();
             listeningThread.start();
-            systemLog.log(Level.CONFIG, "Server running. Version: " + SERVER_VERSION);
-            systemLog.log(Level.CONFIG, "Communication protocol version: " + ServerSocketThread.PROTOCOL_VERSION);
             }
         catch(IOException e)
             {
