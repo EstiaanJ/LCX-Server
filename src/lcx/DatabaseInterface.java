@@ -154,10 +154,12 @@ public class DatabaseInterface
         {
         if (!accountNumberExists(inFrom) || !accountNumberExists(inTo))
             {
+            dbLog.log(Level.WARNING ,"'Trasnfer from' or 'Transfer to' account did not exist. Transfer failed.");
             return false;
             }
         if(inFrom.equals(inTo))
             {
+            dbLog.log(Level.WARNING ,"'Trasnfer from' account was the same as 'Transfer to' account. Transfer failed.");
             return false;
             }
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
