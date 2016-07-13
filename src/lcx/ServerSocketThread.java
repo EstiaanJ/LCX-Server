@@ -58,7 +58,7 @@ public class ServerSocketThread implements Runnable
         /*
         LCX.systemLog.log(Level.FINE, "Determining client version.");
         determineClientVersion();
-        LCX.systemLog.log(Level.FINE, "Client version is: {0}", clientInstance.getClientVersion());
+        LCX.systemLog.log(Level.FINE, "Clieprivateprivateprivatent version is: {0}", clientInstance.getClientVersion());
         
         LCX.systemLog.log(Level.FINE,"Sending Server version to client: {0}", clientInstance.getServerVersion());
         sendCommand(CommonMessages.VERSION_MESSAGE_START + clientInstance.getServerVersion());

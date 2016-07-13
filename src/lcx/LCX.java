@@ -5,10 +5,14 @@
  */
 package lcx;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import static lcx.DatabaseInterface.DB_LOG_DIR;
 
 
 /**
@@ -18,6 +22,7 @@ import java.util.logging.Logger;
 public class LCX extends Thread
     {
     public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
+    public static FileHandler fileHandler;
     public static DatabaseInterface databaseIF;
     private final static int PORT = 2388;
     private ServerSocket serverSocket;
@@ -70,6 +75,25 @@ public class LCX extends Thread
     
     public static void main(String[] args)
         {
+        
+        try
+            {
+            int logNumber = 0;
+            while((new File("log-" + logNumber + ".txt")).exists())
+                {
+                logNumber++ ;
+                }
+            fileHandler = new FileHandler("log-" + logNumber + ".txt");
+            systemLog.addHandler(fileHandler);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fileHandler.setFormatter(formatter);
+            systemLog.setLevel(Level.ALL);
+            }
+        catch (IOException e)
+            {
+            e.printStackTrace();
+            }
+        
         databaseIF = new DatabaseInterface();
         try
             {
