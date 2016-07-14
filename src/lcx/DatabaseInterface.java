@@ -48,15 +48,10 @@ public class DatabaseInterface
     //***************************** Static Methods ****************************************************
     public static void setFee(String inFee)
         {
-        try
+        if(validateLatinum(inFee,"setFee(String inFee)"))
             {
             BigDecimal validNumTest = new BigDecimal(inFee);
             feeMultiplier = inFee;
-            }
-        catch(NumberFormatException nfe)
-            {
-            dbLog.log(Level.WARNING,"setFee(inFee) was called but inFee was not a number.");
-            System.err.println("DatabaseInterface.setFee(inFee) was called but inFee was not a number. Fee was not changed.");
             }
         }
     
@@ -116,6 +111,10 @@ public class DatabaseInterface
                 {
                 dbLog.log(Level.WARNING, "An invalid account number was passed to the database interface function: "
                     + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+                }
+            else
+                {
+                System.err.println("An invalid latinum number (not a number) was passed to the database interface validate function: " + inNum);
                 }
             return false;
             }
@@ -416,7 +415,7 @@ public class DatabaseInterface
      * @return a string, the last account number it scans that matches the
      * inName argument, or "000000" if no match is found.
      */
-    public String readAcc(String inName)
+    private String readAcc(String inName)
         {
         String acc = "000000";
         File[] allAccounts = ls(DB_DIR);

@@ -189,45 +189,50 @@ public class UserInterface implements Runnable
                 break;
             }
 
-        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+        
+        if (DatabaseInterface.validateLatinum(latinum, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            if (DatabaseInterface.validateLatinum(latinum, DatabaseInterface.EXTERNAL_VALIDATION))
+            System.out.println("New Account details: ");
+            System.out.println("Account Number: " + accountNum);
+            System.out.println("Name: " + name);
+            System.out.println("Latinum: " + latinum);
+
+            String confirm = ConsoleInput.readLine("Confirm new account? [Y/n]");
+            confirm = confirm.toLowerCase();
+
+            if (confirm.equals(CONFIRM1) || confirm.equals(CONFIRM2))
                 {
-                System.out.println("New Account details: ");
-                System.out.println("Account Number: " + accountNum);
-                System.out.println("Name: " + name);
-                System.out.println("Latinum: " + latinum);
-                
-                String confirm = ConsoleInput.readLine("Confirm new account? [Y/n]");
-                confirm = confirm.toLowerCase();
-                
-                if (confirm.equals(CONFIRM1) || confirm.equals(CONFIRM2))
+                if (accountNum.equals(auto))
                     {
-                    if (accountNum.equals(auto))
-                        {
-                        System.out.println("New Account number is: " + LCX.databaseIF.createNewAccount(name, password));
-                        }
-                    else
-                        {
-                        LCX.databaseIF.createNewAccount(accountNum, name, password);
-                        }
+                    String generatedNum = LCX.databaseIF.createNewAccount(name, password);
+                    System.out.println("New Account number is: " + generatedNum);
+                    setLatinum(new String[] {generatedNum,latinum});
                     }
                 else
                     {
-                    String responce = ConsoleInput.readLine("Would you like to cancel new account? [Y/n]");
-                    if (responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
-                        {
+                    if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+                        {   
+                        LCX.databaseIF.createNewAccount(accountNum, name, password);
+                        setLatinum(new String[] {accountNum,latinum});
+                        }
+                    }
+                }
+            else
+                {
+                String responce = ConsoleInput.readLine("Would you like to cancel new account? [Y/n]");
+                if (responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
+                    {
 
-                        }
-                    else
-                        {
-                        createAccount(args);
-                        }
+                    }
+                else
+                    {
+                    createAccount(args);
                     }
                 }
             }
         }
-
+        
+    
     private void setLatinum(String[] args)
         {
         String latinum;
@@ -378,7 +383,7 @@ public class UserInterface implements Runnable
                     }
                 else
                     {
-                    System.out.println("Library version and protocol version are private");
+                    System.out.println("Library version is private");
                     System.out.println();
                     }
                 }
@@ -452,7 +457,9 @@ public class UserInterface implements Runnable
         
         if (DatabaseInterface.validateLatinum(inFee, DatabaseInterface.EXTERNAL_VALIDATION))
                 {
-                DatabaseInterface.setFee(inFee);
+                BigDecimal inPercentage = new BigDecimal(inFee);
+                BigDecimal fee = inPercentage.divide(new BigDecimal("100"));
+                DatabaseInterface.setFee(fee.toPlainString());
                 }
         }
 
@@ -480,18 +487,8 @@ public class UserInterface implements Runnable
 
     private void printAccount(String[] args)
         {
-        System.out.println("This function is experimental; it only returns the last account it finds that has the given name.");
-        String name;
-        if (args.length == 0)
-            {
-            name = ConsoleInput.readLine("Please enter name: ");
-            }
-        else
-            {
-            name = args[0];
-            }
-
-        System.out.println(LCX.databaseIF.readAcc(name));
+        System.out.println("This function is not ready yet");
+        
         }
 
     private void printLatinum(String[] args)
@@ -507,7 +504,7 @@ public class UserInterface implements Runnable
             }
         if (DatabaseInterface.validateAccountNum(acc, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            System.out.println(LCX.databaseIF.readLatinum(acc));
+            System.out.println("Account has " + LCX.databaseIF.readLatinum(acc) + " Latinum");
             }
         }
 
