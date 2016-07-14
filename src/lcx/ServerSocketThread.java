@@ -23,8 +23,7 @@ public class ServerSocketThread implements Runnable
 //A thread and object of this class only ever deals with one client program instance (if the user closes the client program, the thread it used will expire)
     {
 
-    private static final String PROTOCOL_VERSION = "0.1";
-    private static final String SERVER_VERSION = "0.2";
+    public static final String PROTOCOL_VERSION = "0.1";
 
     private final Socket clientSocket;
     private MessageHandler messageHandler;
@@ -58,7 +57,7 @@ public class ServerSocketThread implements Runnable
         /*
         LCX.systemLog.log(Level.FINE, "Determining client version.");
         determineClientVersion();
-        LCX.systemLog.log(Level.FINE, "Client version is: {0}", clientInstance.getClientVersion());
+        LCX.systemLog.log(Level.FINE, "Clieprivateprivateprivatent version is: {0}", clientInstance.getClientVersion());
         
         LCX.systemLog.log(Level.FINE,"Sending Server version to client: {0}", clientInstance.getServerVersion());
         sendCommand(CommonMessages.VERSION_MESSAGE_START + clientInstance.getServerVersion());
@@ -68,7 +67,7 @@ public class ServerSocketThread implements Runnable
          */
         LCX.systemLog.log(Level.FINE, "Waiting for request from client...");
         processMessages();
-        closeConnection();
+       closeConnection();
         }
 
     private void processMessages()
@@ -76,7 +75,7 @@ public class ServerSocketThread implements Runnable
             
             Message inMsg = new Message(MessageHeaders.NO_MESSAGE,PROTOCOL_VERSION,new String[0],"");
             
-            while (!inMsg.getHead().equals(MessageHeaders.CONNECTION_CLOSE_REQUEST)) {
+            while (!inMsg.getHead().equals(MessageHeaders.CONNECTION_CLOSE)) {
             
                 try {
                     inMsg = messageHandler.receive();
@@ -146,12 +145,13 @@ public class ServerSocketThread implements Runnable
                 {
                 //This end-of-field exception means that the socket has been closed.
                 //So we should just end the thread safely by letting it run its course.
-                closeConnection();
                 break;
                 }
             catch (IOException e)
                 {
+                //Something's wrong with the communication between the client and server. Abort.
                 e.printStackTrace();
+                break;
                 }
 
             }

@@ -14,13 +14,13 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import shared.UserAccount;
 
 /**
@@ -29,6 +29,7 @@ import shared.UserAccount;
  */
 public class DatabaseInterface
     {
+
     public final static String DB_DIR = "database" + File.separator;
     public final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
     public final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
@@ -42,35 +43,44 @@ public class DatabaseInterface
     private BufferedWriter accountWriteBuffer;
     private FileReader accountReader;
     private BufferedReader accountReadBuffer;
-    
-    //***************************** Constructors | Standard OO stuff **********************************
 
+    //***************************** Constructors | Standard OO stuff **********************************
     public DatabaseInterface()
         {
-            if(!Files.exists(Paths.get(DB_DIR))) {
-                File dir = new File(DB_DIR);
-                dir.mkdir();
+        if (!Files.exists(Paths.get(DB_DIR)))
+            {
+            File dir = new File(DB_DIR);
+            dir.mkdir();
             }
-            if(!Files.exists(Paths.get(DB_LOG_DIR))) {
-                File dir = new File(DB_LOG_DIR);
-                dir.mkdir();
+        if (!Files.exists(Paths.get(DB_LOG_DIR)))
+            {
+            File dir = new File(DB_LOG_DIR);
+            dir.mkdir();
             }
-            
-            if (!(accountNumberExists(LCX_FEE_ACCOUNT_NUMBER))) {
-                createNewAccount(LCX_FEE_ACCOUNT_NUMBER,"LCX","terella");
+
+        if (!(accountNumberExists(LCX_FEE_ACCOUNT_NUMBER)))
+            {
+            createNewAccount(LCX_FEE_ACCOUNT_NUMBER, "LCX", "terella");
             }
-            
+
         try
             {
-            fh = new FileHandler(DB_LOG_DIR + "databaseLog-" + LocalDateTime.now().toString().replace(":", "-") + ".txt");
+            int logNumber = 0;
+            while((new File(DB_LOG_DIR + "databaseLog-" + logNumber + ".txt")).exists())
+                {
+                logNumber++ ;
+                }
+            fh = new FileHandler(DB_LOG_DIR + "databaseLog-" + logNumber + ".txt");
+            dbLog.addHandler(fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fh.setFormatter(formatter);
+            dbLog.setLevel(Level.ALL);
             }
-        catch(IOException e)
+        catch (IOException e)
             {
             e.printStackTrace();
             }
         }
-    
-    
 
     //***************************** Setters | Standard OO stuff **********************************
     //***************************** Getters | Standard OO stuff **********************************
@@ -79,7 +89,7 @@ public class DatabaseInterface
         {
         dbLog.log(Level.FINE, "Server requested login for Account: {0}", inAcc);
         boolean validLogin = false;
-        String actualPass = readFileLine(inAcc, 1);
+        String actualPass = readFileLine(inAcc, PASSWORD_POS);
         if (inPass.equals(actualPass))
             {
             dbLog.log(Level.FINE, "Passwords Matched");
@@ -91,14 +101,14 @@ public class DatabaseInterface
             }
         return validLogin;
         }
-    
+
     public String createNewAccount(String inName, String inPass)
         {
-            String newNum = newAccountNumber();
-            createNewAccount(newNum,inName,inPass);
-            return newNum;
+        String newNum = newAccountNumber();
+        createNewAccount(newNum, inName, inPass);
+        return newNum;
         }
-    
+
     private void createNewAccount(String inAccNum, String inName, String inPass)
         {
         dbLog.log(Level.FINE, "Server requested for a new account to be created with Account Number: {0} With Name: {1}", new Object[]
@@ -133,107 +143,127 @@ public class DatabaseInterface
         catch (IOException e)
             {
             LCX.systemLog.log(Level.SEVERE, "Failed to create new account. Check database log for details.{0}", e.toString());
-            dbLog.log(Level.SEVERE, "Failed to create new account file: {0} with name: {1}", new Object[]{inAccNum, inName});
+            dbLog.log(Level.SEVERE, "Failed to create new account file: {0} with name: {1}", new Object[]
+                {
+                inAccNum, inName
+                });
             }
         }
 
     public boolean transfer(String inFrom, String inTo, String inAmount)
         {
-            if (!accountNumberExists(inFrom) || !accountNumberExists(inTo)) {
-                return false;
+        if (!accountNumberExists(inFrom) || !accountNumberExists(inTo))
+            {
+            dbLog.log(Level.WARNING ,"'Trasnfer from' or 'Transfer to' account did not exist. Transfer failed.");
+            return false;
             }
-            
+        if(inFrom.equals(inTo))
+            {
+            dbLog.log(Level.WARNING ,"'Trasnfer from' account was the same as 'Transfer to' account. Transfer failed.");
+            return false;
+            }
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
             {
             inFrom, inTo, inAmount
             });
-        boolean didTransfer = false;
-        
-        String fromStartLatinum = readFileLine(inFrom,LATINUM_POS);
-        
+
+        String fromStartLatinum = readFileLine(inFrom, LATINUM_POS);
+
         System.out.println("Transfer From Account: " + inFrom + " had: " + fromStartLatinum);
-        
+
         BigDecimal fromLatinum = new BigDecimal(fromStartLatinum);
         BigDecimal amount = new BigDecimal(inAmount);
         BigDecimal fee = new BigDecimal(amount.toPlainString());
         fee = fee.multiply(new BigDecimal("0.001"));
+        
+//Check if the "from account" has enough funs.
+        BigDecimal totalSubtraction = fee.add(amount);
+        BigDecimal totalLatinumAfterTransfer = fromLatinum.subtract(totalSubtraction);
+        if(totalLatinumAfterTransfer.signum() == -1)
+            {
+            return false;
+            }
+        
+        
         System.out.println("Fee is: " + fee.toPlainString());
         fromLatinum = fromLatinum.subtract(amount);
         fromLatinum = fromLatinum.subtract(fee);
         System.out.println("Transfer From Account: " + inFrom + " now has: " + fromLatinum.toPlainString());
-        
+
         String toStartLatinum = readFileLine(inTo, LATINUM_POS);
         System.out.println("Transfer To Account: " + inTo + " had: " + toStartLatinum);
         BigDecimal toLatinum = new BigDecimal(toStartLatinum);
         toLatinum = toLatinum.add(amount);
         System.out.println("Transfer To Account: " + inTo + " now has: " + toLatinum.toPlainString());
         
-        String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER , LATINUM_POS);
+        String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER, LATINUM_POS);
         System.out.println("Bank Account had: " + bankStartLatinum);
         BigDecimal bankLatinum = new BigDecimal(bankStartLatinum);
         bankLatinum = bankLatinum.add(fee);
         System.out.println("Bank Account now has: " + bankLatinum.toPlainString());
-        
+
         System.out.println("Writing 'Transfer From' Account");
         overwriteLine(inFrom, LATINUM_POS, fromLatinum.toPlainString());
         System.out.println("Writing 'Transfer To' Account");
         overwriteLine(inTo, LATINUM_POS, toLatinum.toPlainString());
         System.out.println("Writing Bank Account");
         overwriteLine(LCX_FEE_ACCOUNT_NUMBER, LATINUM_POS, bankLatinum.toPlainString());
-        
+
         return true;
         }
-    
+
     /**
-    *Request a new account number, for a new account, from the database.
-    * This method will randomly generate a new account number between 100 000 and 999 999
-    * and then check if an account with that number already exists. If not, it will return
-    * the generated number as a string. If it does, then it will generate another ad infinitum.
-    *
-    * @return a String unique and unused account number.
-    */
+     * Request a new account number, for a new account, from the database. This
+     * method will randomly generate a new account number between 100 000 and
+     * 999 999 and then check if an account with that number already exists. If
+     * not, it will return the generated number as a string. If it does, then it
+     * will generate another ad infinitum.
+     *
+     * @return a String unique and unused account number.
+     */
     private String newAccountNumber()
         {
-            
+
         String newAccountNum;
-        do {
-          newAccountNum = Integer.toString(ThreadLocalRandom.current().nextInt(100000, 999999));
-        } while(accountNumberExists(newAccountNum));
-            
+        do
+            {
+            newAccountNum = Integer.toString(ThreadLocalRandom.current().nextInt(100000, 999999));
+            }
+        while (accountNumberExists(newAccountNum));
+
         return newAccountNum;
-        
+
         }
 
-    private boolean accountNumberExists(String an) {
-        return (
-                (new File(DB_DIR + an + ".csv")).exists()
-                );
-    }
+    private boolean accountNumberExists(String an)
+        {
+        return ((new File(DB_DIR + an + ".csv")).exists());
+        }
     //***************************** Server Direct Interface Methods | High Level stuff **********************************
-    
+
     /**
-    *safely close the database after writing a status flag to the log.
-    * At the moment that means saving the database log.
-    *
-    * @param flag the status flag
-    */
+     * safely close the database after writing a status flag to the log. At the
+     * moment that means saving the database log.
+     *
+     * @param flag the status flag
+     */
     public void close(int flag)
         {
         dbLog.log(Level.INFO, "The server has requested the database to close with the flag: {0}", flag);
         fh.close();
-        }    
-    
+        }
+
     /**
-    *Safely close the database with the status flag 0.
-    * At the moment that means saving the database log.
-    *
-    * @param flag the status flag
-    */
+     * Safely close the database with the status flag 0. At the moment that
+     * means saving the database log.
+     *
+     * @param flag the status flag
+     */
     public void close()
         {
         close(0);
         }
-    
+
     public void writeName(String inAcc, String inName)
         {
         overwriteLine(inAcc, NAME_POS, inName);
@@ -260,14 +290,14 @@ public class DatabaseInterface
         return name;
         }
 
-    
     /**
-    *Return a specific account number when given a username.
-    *If no account is found with the provided username, it will return "000000".
-    *
-    * @param inName the username of the account to be seached for.
-    * @return a string, the last account number it scans that matches the inName argument, or "000000" if no match is found.
-    */
+     * Return a specific account number when given a username. If no account is
+     * found with the provided username, it will return "000000".
+     *
+     * @param inName the username of the account to be seached for.
+     * @return a string, the last account number it scans that matches the
+     * inName argument, or "000000" if no match is found.
+     */
     public String readAcc(String inName)
         {
         String acc = "000000";
@@ -344,22 +374,22 @@ public class DatabaseInterface
                 allLines.add(line);
                 }
 
-            dbLog.log(Level.FINEST, "Removing line: {0} Line used to be: {1}", new Object[]
+            dbLog.log(Level.FINEST, "Removing line (in memory): {0} Line used to be: {1}", new Object[]
                 {
                 pos, allLines.get(pos)
                 });
             allLines.remove(pos);
-            dbLog.log(Level.FINEST, "Adding line: {0} to position: {1}", new Object[]
+            dbLog.log(Level.FINEST, "Adding line (in memory): {0} to position: {1}", new Object[]
                 {
                 inLine, pos
                 });
             allLines.add(pos, inLine);
 
-            dbLog.log(Level.FINEST, "Closing file");
+            dbLog.log(Level.FINEST, "Closing readonly file");
             accountReadBuffer.close();
             accountReader.close();
 
-            dbLog.log(Level.FINEST, "Opening file: " + inFileName);
+            dbLog.log(Level.FINEST, "Opening file to write: {0}", inFileName);
             accountWriter = new FileWriter(DB_DIR + inFileName + ".csv");
             accountWriteBuffer = new BufferedWriter(accountWriter);
 
@@ -370,12 +400,12 @@ public class DatabaseInterface
                     {
                     accountWriteBuffer.write(System.lineSeparator());
                     }
-                dbLog.log(Level.FINEST, "Writing to memory: {0}at position: {1}", new Object[]
+                dbLog.log(Level.FINEST, "Reading to memory: {0} at position: {1}", new Object[]
                     {
                     allLines.get(i), i
                     }); //This could be overkill
                 }
-            dbLog.log(Level.FINEST, "Writing all changes to file.");
+            dbLog.log(Level.FINEST, "Writing all changes to file. Overwrite Complete.");
             accountWriteBuffer.close();
             accountWriter.close();
             }
@@ -397,7 +427,7 @@ public class DatabaseInterface
     private String readFileLine(String inAccountNumber, int pos)
         {
         String line = "ERROR";
-        
+
         try
             {
             dbLog.log(Level.FINEST, "Opening {0} as readOnly", inAccountNumber);

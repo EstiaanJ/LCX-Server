@@ -5,10 +5,14 @@
  */
 package lcx;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import static lcx.DatabaseInterface.DB_LOG_DIR;
 
 
 /**
@@ -17,11 +21,16 @@ import java.util.logging.Logger;
  */
 public class LCX extends Thread
     {
+    
+    private static final String SERVER_VERSION = "0.2";
+    
     public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
+    public static FileHandler fileHandler;
     public static DatabaseInterface databaseIF;
     private final static int PORT = 2388;
     private ServerSocket serverSocket;
     private final static int STD_TIMEOUT = 5;
+    
             
     public LCX() throws IOException
         {
@@ -30,6 +39,7 @@ public class LCX extends Thread
     @Override
     public void run()
         {
+         
         listenSocket();
         }
     
@@ -70,6 +80,27 @@ public class LCX extends Thread
     
     public static void main(String[] args)
         {
+        
+        try
+            {
+            int logNumber = 0;
+            while((new File("log-" + logNumber + ".txt")).exists())
+                {
+                logNumber++ ;
+                }
+            fileHandler = new FileHandler("log-" + logNumber + ".txt");
+            systemLog.addHandler(fileHandler);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fileHandler.setFormatter(formatter);
+            systemLog.setLevel(Level.ALL);
+            systemLog.log(Level.INFO, "Server running. Version: " + SERVER_VERSION);
+            systemLog.log(Level.INFO, "Communication protocol version: " + ServerSocketThread.PROTOCOL_VERSION);
+            }
+        catch (IOException e)
+            {
+            e.printStackTrace();
+            }
+        
         databaseIF = new DatabaseInterface();
         try
             {
