@@ -8,11 +8,12 @@ package lcx;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import static lcx.DatabaseInterface.DB_LOG_DIR;
 
 
 /**
@@ -23,7 +24,7 @@ public class LCX extends Thread
     {
     
     private static final String SERVER_VERSION = "0.2";
-    
+    public static final ConsoleHandler conHandle = new ConsoleHandler();
     public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
     public static FileHandler fileHandler;
     public static DatabaseInterface databaseIF;
@@ -57,7 +58,7 @@ public class LCX extends Thread
         systemLog.log(Level.FINE, "Ready for clients.");
         while(true)
             {
-            systemLog.log(Level.INFO, "Waiting for client...");
+            systemLog.log(Level.FINE, "Waiting for client...");
             ServerSocketThread server;
             try
                 {
@@ -80,9 +81,22 @@ public class LCX extends Thread
     
     public static void main(String[] args)
         {
+        //Stop loggers printing to console by default.
+        LogManager.getLogManager().reset();
         
+        //Only messages that are fine or above, and are attached to this handler will print to console.
+        conHandle.setLevel(Level.FINE);
+        
+        /*Try to create a file handler for systemLog, 
+        make systemLog handled by the conHandle and fileHandler
+        so that that messages to the console, and the log file can be
+        controlled.
+        Finnally print the server and protocal version.
+        */
         try
             {
+            systemLog.addHandler(conHandle);
+            
             int logNumber = 0;
             while((new File("log-" + logNumber + ".txt")).exists())
                 {
@@ -90,9 +104,13 @@ public class LCX extends Thread
                 }
             fileHandler = new FileHandler("log-" + logNumber + ".txt");
             systemLog.addHandler(fileHandler);
+            
             SimpleFormatter formatter = new SimpleFormatter();
             fileHandler.setFormatter(formatter);
+            
             systemLog.setLevel(Level.ALL);
+            fileHandler.setLevel(Level.ALL);
+            
             systemLog.log(Level.INFO, "Server running. Version: " + SERVER_VERSION);
             systemLog.log(Level.INFO, "Communication protocol version: " + ServerSocketThread.PROTOCOL_VERSION);
             }
@@ -101,7 +119,20 @@ public class LCX extends Thread
             e.printStackTrace();
             }
         
+        /*
+        Set the console handler back to info, so that only important messages
+        can be printed to the console.
+        */
+        
+        conHandle.setLevel(Level.INFO);
+        
+        //Initialize the database.
         databaseIF = new DatabaseInterface();
+        
+        //Initialize and Start the thread that listens for command line messages
+        (new Thread(new UserInterface())).start();
+
+        //Initialize and Start the thread that listens for clients.
         try
             {
             Thread listeningThread = new LCX();
