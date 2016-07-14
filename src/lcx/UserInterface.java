@@ -147,7 +147,7 @@ public class UserInterface implements Runnable
 
     private void stopListening()
         {
-        System.out.println("Not Implemented yet.");
+        LCX.setIsListening(false);
         }
 
     private void setLevel(String[] args)
@@ -157,7 +157,7 @@ public class UserInterface implements Runnable
 
     private void startListening()
         {
-        System.out.println("Not implemented yet.");
+        LCX.startListening();
         }
 
     private void createAccount(String[] args)

@@ -30,6 +30,8 @@ public class LCX extends Thread
     private final static int PORT = 2388;
     private ServerSocket serverSocket;
     private final static int STD_TIMEOUT = 5;
+    private static boolean isListening = false;
+    private static LCX lcx;
     
             
     public LCX() throws IOException
@@ -39,11 +41,10 @@ public class LCX extends Thread
     @Override
     public void run()
         {
-         
-        listenSocket();
+        setupSockets();
         }
     
-    public void listenSocket()
+    private void setupSockets()
         {
         try
             {
@@ -55,7 +56,12 @@ public class LCX extends Thread
             System.exit(-1);
             }
         systemLog.log(Level.FINE, "Ready for clients.");
-        while(true)
+        listenSockets();
+        }
+    
+    public void listenSockets()
+        {
+        while(isListening)
             {
             systemLog.log(Level.FINE, "Waiting for client...");
             ServerSocketThread server;
@@ -132,9 +138,11 @@ public class LCX extends Thread
         (new Thread(new UserInterface())).start();
 
         //Initialize and Start the thread that listens for clients.
+        
         try
             {
-            Thread listeningThread = new LCX();
+            lcx = new LCX();
+            Thread listeningThread = lcx;
             listeningThread.start();
             }
         catch(IOException e)
@@ -143,4 +151,22 @@ public class LCX extends Thread
             System.exit(-1);
             }
         }
+    
+    public static void startListening()
+        {
+        setIsListening(true);
+        lcx.listenSockets();
+        systemLog.log(Level.INFO,"Starting listen thread.");
+        }
+    
+    public static void setIsListening(boolean inState)
+        {
+        isListening = inState;
+        }
+    
+    public static boolean getIsListening()
+        {
+        return isListening;
+        }
+    
     }
