@@ -149,7 +149,9 @@ public class ServerSocketThread implements Runnable
                 }
             catch (IOException e)
                 {
+                //Something's wrong with the communication between the client and server. Abort.
                 e.printStackTrace();
+                break;
                 }
 
             }
