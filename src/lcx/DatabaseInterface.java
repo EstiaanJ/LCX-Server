@@ -39,10 +39,30 @@ public class DatabaseInterface
     public final static int LATINUM_POS = 3;
     private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
     private static FileHandler fh;
+    public static String feeMultiplier = "0.001";
     private FileWriter accountWriter;
     private BufferedWriter accountWriteBuffer;
     private FileReader accountReader;
     private BufferedReader accountReadBuffer;
+    //***************************** Static Methods ****************************************************
+    public static void setFee(String inFee)
+        {
+        try
+            {
+            BigDecimal validNumTest = new BigDecimal(inFee);
+            feeMultiplier = inFee;
+            }
+        catch(NumberFormatException nfe)
+            {
+            dbLog.log(Level.WARNING,"setFee(inFee) was called but inFee was not a number.");
+            System.err.println("DatabaseInterface.setFee(inFee) was called but inFee was not a number. Fee was not changed.");
+            }
+        }
+    
+    public static String getFee()
+        {
+        return feeMultiplier;
+        }
 
     //***************************** Constructors | Standard OO stuff **********************************
     public DatabaseInterface()
@@ -109,7 +129,7 @@ public class DatabaseInterface
         return newNum;
         }
 
-    private void createNewAccount(String inAccNum, String inName, String inPass)
+    public void createNewAccount(String inAccNum, String inName, String inPass)
         {
         dbLog.log(Level.FINE, "Server requested for a new account to be created with Account Number: {0} With Name: {1}", new Object[]
             {
@@ -174,7 +194,7 @@ public class DatabaseInterface
         BigDecimal fromLatinum = new BigDecimal(fromStartLatinum);
         BigDecimal amount = new BigDecimal(inAmount);
         BigDecimal fee = new BigDecimal(amount.toPlainString());
-        fee = fee.multiply(new BigDecimal("0.001"));
+        fee = fee.multiply(new BigDecimal(feeMultiplier));
         
 //Check if the "from account" has enough funs.
         BigDecimal totalSubtraction = fee.add(amount);
@@ -283,11 +303,22 @@ public class DatabaseInterface
         {
         overwriteLine(inAcc, PASSWORD_POS, inPassword);
         }
+    
 
     public String readName(String inAcc)
         {
-        String name = readFileLine(inAcc, NAME_POS);
-        return name;
+        try
+            {
+            Integer.valueOf(inAcc);
+            String name = readFileLine(inAcc, NAME_POS);
+            return name;
+            }
+        catch(NumberFormatException nfe)
+            {
+            dbLog.log(Level.WARNING,"readName(accountNumber) was called but the string provided was not a number: {0}", inAcc);
+            System.err.println("DatabaseInterface.instance.readName(accountNumber) was called but the string provided was not a number: " + inAcc);
+            return "invalid";
+            }
         }
 
     /**

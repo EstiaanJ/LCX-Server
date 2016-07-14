@@ -22,8 +22,7 @@ import java.util.logging.SimpleFormatter;
  */
 public class LCX extends Thread
     {
-    
-    private static final String SERVER_VERSION = "0.2";
+    public static final String SERVER_VERSION = "0.2";
     public static final ConsoleHandler conHandle = new ConsoleHandler();
     public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
     public static FileHandler fileHandler;
