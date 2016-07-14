@@ -33,6 +33,7 @@ public class DatabaseInterface
     public final static String DB_DIR = "database" + File.separator;
     public final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
     public final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
+    public final static String EXTERNAL_VALIDATION = "EXTERNAL";
     public final static int ACCOUNT_NUM_POS = 0;
     public final static int PASSWORD_POS = 1;
     public final static int NAME_POS = 2;
@@ -75,15 +76,29 @@ public class DatabaseInterface
                 }
             else
                 {
-                dbLog.log(Level.WARNING, "An invalid account number (too high, or too low) was passed to the database interface function: "
+                if(!(inSource.equals(EXTERNAL_VALIDATION)))
+                    {
+                    dbLog.log(Level.WARNING, "An invalid account number (too high, or too low) was passed to the database interface function: "
                     + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+                    }
+                else
+                    {
+                    System.err.println("An invalid account number (too high, or too low) was passed to the database interface validate function: " + inNum);
+                    }
                 return false;
                 }
             }
         catch(NumberFormatException nfe)
             {
-            dbLog.log(Level.WARNING, "An invalid account number (not a number) was passed to the database interface function: "
+            if(!(inSource.equals(EXTERNAL_VALIDATION)))
+                    {
+                    dbLog.log(Level.WARNING, "An invalid account number (not a number) was passed to the database interface function: "
                     + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+                    }
+                else
+                    {
+                    System.err.println("An invalid account number (not a number) was passed to the database interface validate function: " + inNum);
+                    }
             return false;
             }
         }
@@ -97,8 +112,11 @@ public class DatabaseInterface
             }
         catch(NumberFormatException nfe)
             {
-            dbLog.log(Level.WARNING, "An invalid account number was passed to the database interface function: "
+            if(!(inSource.equals(EXTERNAL_VALIDATION)))
+                {
+                dbLog.log(Level.WARNING, "An invalid account number was passed to the database interface function: "
                     + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+                }
             return false;
             }
         }

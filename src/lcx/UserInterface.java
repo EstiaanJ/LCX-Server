@@ -4,14 +4,17 @@
  * and open the template in the editor.
  */
 package lcx;
+
 import consoleinput.ConsoleInput;
 import java.math.BigDecimal;
+
 /**
  *
  * @author estiaan
  */
 public class UserInterface implements Runnable
     {
+
     final static String EXIT = "exit";
     final static String STOP_LISTEN = "stopListening";
     final static String SET_LEVEL = "setLevel"; //setLevel [log] [level] where log is systemLog or databaseLog and level is any of the log level strings
@@ -37,22 +40,22 @@ public class UserInterface implements Runnable
     final static String NEGATIVE1 = "n";
     final static String NEGATIVE2 = "no";
     //final static String NO_ARG = "#";
-   
+
     @Override
     public void run()
         {
         String[] userInput;
-        while(true)
+        while (true)
             {
             System.out.println("---");
             System.out.println("Ready for new command: ");
-            
+
             String message = ConsoleInput.readLine();
             userInput = message.split(" ");
-            
+
             String command = userInput[0];
             userInput = moveDown(userInput);
-            switch(command)
+            switch (command)
                 {
                 case EXIT:
                     exit();
@@ -107,14 +110,14 @@ public class UserInterface implements Runnable
                     break;
                 case GET_ACCOUNT:
                     printAccount(userInput);
-                    break;                   
+                    break;
                 case GET_LATINUM:
                     printLatinum(userInput);
                     break;
                 case "TEST":
                     testArgs(userInput);
                     break;
-                   
+
                 default:
                     System.err.println("[Input Error] Invalid command: " + command);
                     System.out.println("For help enter 'help'");
@@ -122,41 +125,41 @@ public class UserInterface implements Runnable
                 }
             }
         }
-    
+
     private void exit()
         {
         String responce = ConsoleInput.readLine("Are you sure you want to shut down the LCX Server? [Y/n]");
         responce = responce.toLowerCase();
-        if(responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
+        if (responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
             {
             System.exit(0);
-            }          
+            }
         }
-    
+
     private void testArgs(String[] args)
         {
         System.out.println("This is a test method, used to test if arguments are recieved correctly: ");
-        for(int i = 0; i < args.length; i++)
+        for (int i = 0; i < args.length; i++)
             {
             System.out.println("Argument " + i + " was: " + args[i]);
             }
         }
-    
+
     private void stopListening()
         {
         System.out.println("Not Implemented yet.");
         }
-    
+
     private void setLevel(String[] args)
         {
         System.out.println("Not implemented yet.");
         }
-    
+
     private void startListening()
         {
         System.out.println("Not implemented yet.");
         }
-    
+
     private void createAccount(String[] args)
         {
         final String auto = "Automatically generated";
@@ -164,7 +167,7 @@ public class UserInterface implements Runnable
         String password;
         String name;
         String latinum = "0";
-        
+
         switch (args.length)
             {
             case 4:
@@ -185,57 +188,51 @@ public class UserInterface implements Runnable
                 latinum = ConsoleInput.readLine("Please enter latinum for new account:");
                 break;
             }
-        
-        try
+
+        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            if(Integer.valueOf(accountNum) < 100000 || Integer.valueOf(accountNum) > 999999)
+            if (DatabaseInterface.validateLatinum(latinum, DatabaseInterface.EXTERNAL_VALIDATION))
                 {
-                System.err.println("[Input Error] The account number was invalid: Too long, too short, or it had leading zeros.");
-                return;
-                }
-            }
-        catch(NumberFormatException nfe)
-            {
-            System.err.println("The account number was not an integer.");  
-            }
-        
-        System.out.println("New Account details: ");
-        System.out.println("Account Number: " + accountNum);
-        System.out.println("Name: " + name);
-        System.out.println("Latinum: " + latinum);
-        
-        String confirm = ConsoleInput.readLine("Confirm new account? [Y/n]");
-        confirm = confirm.toLowerCase();
-        if(confirm.equals(CONFIRM1) || confirm.equals(CONFIRM2) )
-            {
-            if(accountNum.equals(auto))
-                {
-                System.out.println("New Account number is: " + LCX.databaseIF.createNewAccount(name,password));
-                }
-            else
-                {
-                LCX.databaseIF.createNewAccount(accountNum, name, password);
-                }
-            }
-        else
-            {
-            String responce = ConsoleInput.readLine("Would you like to cancel new account? [Y/n]");
-            if(responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
-                {
+                System.out.println("New Account details: ");
+                System.out.println("Account Number: " + accountNum);
+                System.out.println("Name: " + name);
+                System.out.println("Latinum: " + latinum);
                 
-                }
-            else
-                {
-                createAccount(args);
+                String confirm = ConsoleInput.readLine("Confirm new account? [Y/n]");
+                confirm = confirm.toLowerCase();
+                
+                if (confirm.equals(CONFIRM1) || confirm.equals(CONFIRM2))
+                    {
+                    if (accountNum.equals(auto))
+                        {
+                        System.out.println("New Account number is: " + LCX.databaseIF.createNewAccount(name, password));
+                        }
+                    else
+                        {
+                        LCX.databaseIF.createNewAccount(accountNum, name, password);
+                        }
+                    }
+                else
+                    {
+                    String responce = ConsoleInput.readLine("Would you like to cancel new account? [Y/n]");
+                    if (responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
+                        {
+
+                        }
+                    else
+                        {
+                        createAccount(args);
+                        }
+                    }
                 }
             }
         }
-    
+
     private void setLatinum(String[] args)
         {
         String latinum;
         String accountNum;
-        if(args.length < 2)
+        if (args.length < 2)
             {
             System.out.println("Argument length was incorrect, set latinum manually:");
             accountNum = ConsoleInput.readLine("Enter Account Number: ");
@@ -246,63 +243,42 @@ public class UserInterface implements Runnable
             accountNum = args[0];
             latinum = args[1];
             }
-        //Check that account number is a valid one.
-        try
+        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            if(Integer.valueOf(accountNum) < 100000 || Integer.valueOf(accountNum) > 999999)
+            if (DatabaseInterface.validateLatinum(latinum, DatabaseInterface.EXTERNAL_VALIDATION))
                 {
-                System.err.println("[Input Error]The account number was invalid: Too long, too short, or it had leading zeros.");
-                return;
+                BigDecimal lat = new BigDecimal(latinum);
+                LCX.databaseIF.writeLatinum(accountNum, lat);
                 }
             }
-        catch(NumberFormatException nfe)
-            {
-            System.err.println("The account number was not an integer.");  
-            }
-                
-        try
-            {
-            BigDecimal lat = new BigDecimal(latinum);
-            LCX.databaseIF.writeLatinum(accountNum, lat);
-            }
-        catch(NumberFormatException nfe)
-            {
-            System.err.println("The value for latinum was not a valid number.");
-            }
         }
-    
+
     private void setPass(String[] args)
         {
-        String latinum;
+        String password;
         String accountNum;
-        if(args.length < 2)
+        if (args.length < 2)
             {
-            System.out.println("Argument length was incorrect, set latinum manually:");
+            System.out.println("Argument length was incorrect, set password manually:");
             accountNum = ConsoleInput.readLine("Enter Account Number: ");
-            latinum = ConsoleInput.readLine("Enter Latinum: ");
+            password = ConsoleInput.readLine("Enter Password: ");
             }
         else
             {
             accountNum = args[0];
-            latinum = args[1];
+            password = args[1];
             }
-        
-        try
+        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            BigDecimal lat = new BigDecimal(latinum);
-            LCX.databaseIF.writeLatinum(accountNum, lat);
-            }
-        catch(NumberFormatException nfe)
-            {
-            System.err.println("The value for latinum was not a valid number.");
+            LCX.databaseIF.writePassword(accountNum, password);
             }
         }
-    
+
     private void setName(String[] args)
         {
         String acc;
         String name;
-        if(args.length < 2)
+        if (args.length < 2)
             {
             acc = ConsoleInput.readLine("Please enter account number: ");
             name = ConsoleInput.readLine("Please enter new name: ");
@@ -312,40 +288,38 @@ public class UserInterface implements Runnable
             acc = args[0];
             name = args[1];
             }
-        
-        try
+
+        if (DatabaseInterface.validateAccountNum(acc, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            Integer.valueOf(acc);
             LCX.databaseIF.writeName(acc, name);
             }
-        catch(NumberFormatException nfe)
-            {
-            System.err.println("The given account number was not a number: " + acc);
-            }
         }
-    
+
     private void help(String[] args)
         {
-        if(args.length  < 1)
+        if (args.length < 1)
             {
             System.out.println("The usage of commands without arguments is simply [command] e.g. : " + EXIT);
             System.out.println("The usage of commands with flags is: [command] -[flag 1] -[flag 2] e.g. : " + LIST + " -c");
             System.out.println("The usage of commands with arguments is: [command] [arg 1] [arg 2] e.g. : " + UserInterface.SET_FEE + " 10");
-            list(new String[] {"-c"});
+            list(new String[]
+                {
+                "-c"
+                });
             }
         else
             {
             System.out.println("Not availble yet.");
             }
         }
-    
+
     private void list(String[] args)
         {
-        if(args.length < 1)
+        if (args.length < 1)
             {
             System.out.println("This command requires a flag!");
             }
-        if(args[0].equals("-c"))
+        if (args[0].equals("-c"))
             {
             System.out.println();
             System.out.println("-------------------------------------------");
@@ -376,56 +350,98 @@ public class UserInterface implements Runnable
             {
             System.out.println("Not implemented yet.");
             }
-        
+
         }
-    
+
     private void version(String[] args)
         {
-        if(args.length == 0)
+        if (args.length == 0)
             {
             System.out.println("Server Version: " + LCX.SERVER_VERSION);
             //TODO: Make library version constant public.
             System.out.println("Library Version: Is private for now.");
             System.out.println("Protocal Version: " + ServerSocketThread.PROTOCOL_VERSION);
-            
+
             }
         else
             {
             args[0] = args[0].toLowerCase();
-            if(args[0].equals("-s"))
+            if (args[0].equals("-s"))
                 {
                 System.out.println("Server Version: " + LCX.SERVER_VERSION);
                 }
-            else if(args[0].equals("-p"))
+            else
                 {
-                System.out.println("Protocal Version: " + ServerSocketThread.PROTOCOL_VERSION);
-                }
-            else{
-                System.out.println("Library version and protocol version are private");
-                System.out.println();
+                if (args[0].equals("-p"))
+                    {
+                    System.out.println("Protocal Version: " + ServerSocketThread.PROTOCOL_VERSION);
+                    }
+                else
+                    {
+                    System.out.println("Library version and protocol version are private");
+                    System.out.println();
+                    }
                 }
             }
         }
-    
+
     private void addLatinum(String[] args)
         {
-        System.out.println("Not implemented yet.");
+        String amount;
+        String accountNum;
+        if (args.length < 2)
+            {
+            System.out.println("Argument length was incorrect, add latinum manually: ");
+            accountNum = ConsoleInput.readLine("Enter Account Number: ");
+            amount = ConsoleInput.readLine("Enter Amount to add: ");
+            }
+        else
+            {
+            accountNum = args[0];
+            amount = args[1];
+            }
+        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+            {
+            if (DatabaseInterface.validateLatinum(amount, DatabaseInterface.EXTERNAL_VALIDATION))
+                {
+                LCX.databaseIF.addLatinum(accountNum, amount);
+                }
+            }
         }
-    
+
     private void subLatinum(String[] args)
         {
-        System.out.println("Not implemented yet.");
+        String amount;
+        String accountNum;
+        if (args.length < 2)
+            {
+            System.out.println("Argument length was incorrect, subtract latinum manually: ");
+            accountNum = ConsoleInput.readLine("Enter Account Number: ");
+            amount = ConsoleInput.readLine("Enter Amount to subtract: ");
+            }
+        else
+            {
+            accountNum = args[0];
+            amount = args[1];
+            }
+        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+            {
+            if (DatabaseInterface.validateLatinum(amount, DatabaseInterface.EXTERNAL_VALIDATION))
+                {
+                LCX.databaseIF.subLatinum(accountNum, amount);
+                }
+            }
         }
-    
+
     private void printFee()
         {
-        System.out.println("The LCX Tranfer Fee is: " + (Double.valueOf(DatabaseInterface.getFee())*100) + "% of the value of said transfer.");
+        System.out.println("The LCX Tranfer Fee is: " + (Double.valueOf(DatabaseInterface.getFee()) * 100) + "% of the value of said transfer.");
         }
-    
+
     private void setFee(String[] args)
         {
         String inFee;
-        if(args.length == 0)
+        if (args.length == 0)
             {
             inFee = ConsoleInput.readLine("Please enter the fee as a percentage (no percentage sign!).");
             }
@@ -434,27 +450,21 @@ public class UserInterface implements Runnable
             inFee = args[0];
             }
         
-        try
-            {
-            BigDecimal validNumTest = new BigDecimal(inFee);
-            DatabaseInterface.setFee(inFee);
-            }
-        catch(NumberFormatException nfe)
-            {
-            System.out.println("Set fee to: " + inFee + "?");
-            System.out.println("The 'fee' argument or input was not a number.");
-            }
+        if (DatabaseInterface.validateLatinum(inFee, DatabaseInterface.EXTERNAL_VALIDATION))
+                {
+                DatabaseInterface.setFee(inFee);
+                }
         }
-    
+
     private void printLCXAccounts()
         {
         System.out.println("Not implemented yet.");
         }
-    
+
     private void printName(String[] args)
         {
         String acc;
-        if(args.length == 0)
+        if (args.length == 0)
             {
             acc = ConsoleInput.readLine("Please enter account number: ");
             }
@@ -462,23 +472,17 @@ public class UserInterface implements Runnable
             {
             acc = args[0];
             }
-        
-        try
+         if (DatabaseInterface.validateAccountNum(acc, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            Integer.valueOf(acc);
             System.out.println(LCX.databaseIF.readName(acc));
             }
-        catch(NumberFormatException nfe)
-            {
-            System.err.println("The given account number was not a number: " + acc);
-            }
         }
-    
+
     private void printAccount(String[] args)
         {
         System.out.println("This function is experimental; it only returns the last account it finds that has the given name.");
         String name;
-        if(args.length == 0)
+        if (args.length == 0)
             {
             name = ConsoleInput.readLine("Please enter name: ");
             }
@@ -489,11 +493,11 @@ public class UserInterface implements Runnable
 
         System.out.println(LCX.databaseIF.readAcc(name));
         }
-    
+
     private void printLatinum(String[] args)
         {
         String acc;
-        if(args.length == 0)
+        if (args.length == 0)
             {
             acc = ConsoleInput.readLine("Please enter account number: ");
             }
@@ -501,22 +505,16 @@ public class UserInterface implements Runnable
             {
             acc = args[0];
             }
-        
-        try
+        if (DatabaseInterface.validateAccountNum(acc, DatabaseInterface.EXTERNAL_VALIDATION))
             {
-            Integer.valueOf(acc);
-            System.out.println(LCX.databaseIF.readLatinumString(acc));
-            }
-        catch(NumberFormatException nfe)
-            {
-            System.err.println("The given account number was not a number: " + acc);
+            System.out.println(LCX.databaseIF.readLatinum(acc));
             }
         }
-    
+
     private static String[] moveDown(String[] inArray)
         {
         String[] retArray = new String[inArray.length - 1];
-        for(int i = 0; i < retArray.length; i++)
+        for (int i = 0; i < retArray.length; i++)
             {
             retArray[i] = inArray[i + 1];
             }
