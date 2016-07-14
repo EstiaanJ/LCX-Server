@@ -63,6 +63,45 @@ public class DatabaseInterface
         {
         return feeMultiplier;
         }
+    
+    public static boolean validateAccountNum(String inNum,String inSource)
+        {
+        try
+            {
+            int num = Integer.valueOf(inNum);
+            if(num > 100000 && num < 999999)
+                {
+                return true;
+                }
+            else
+                {
+                dbLog.log(Level.WARNING, "An invalid account number (too high, or too low) was passed to the database interface function: "
+                    + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+                return false;
+                }
+            }
+        catch(NumberFormatException nfe)
+            {
+            dbLog.log(Level.WARNING, "An invalid account number (not a number) was passed to the database interface function: "
+                    + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+            return false;
+            }
+        }
+    
+    public static boolean validateLatinum(String inNum, String inSource)
+        {
+        try
+            {
+            BigDecimal test = new BigDecimal(inNum);
+            return true;
+            }
+        catch(NumberFormatException nfe)
+            {
+            dbLog.log(Level.WARNING, "An invalid account number was passed to the database interface function: "
+                    + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+            return false;
+            }
+        }
 
     //***************************** Constructors | Standard OO stuff **********************************
     public DatabaseInterface()
@@ -259,7 +298,7 @@ public class DatabaseInterface
         {
         return ((new File(DB_DIR + an + ".csv")).exists());
         }
-    //***************************** Server Direct Interface Methods | High Level stuff **********************************
+    //***************************** Direct Interface Methods | High Level stuff **********************************
 
     /**
      * safely close the database after writing a status flag to the log. At the
@@ -304,19 +343,49 @@ public class DatabaseInterface
         overwriteLine(inAcc, PASSWORD_POS, inPassword);
         }
     
-
+    public String addLatinum(String inAcc, String inAmount)
+        {
+        String finalLat = "LATINUM WAS NOT SET";
+        if(validateAccountNum(inAcc,"addLatinum(String inAcc, String inAmount)"))
+            {
+            if(validateLatinum(inAmount,"addLatinum(String inAcc, String inAmount)"))
+                {
+                BigDecimal originalLatinum = new BigDecimal(readFileLine(inAcc,LATINUM_POS));
+                BigDecimal amountToAdd = new BigDecimal(inAmount);
+                BigDecimal finalAmount = originalLatinum.add(amountToAdd);
+                overwriteLine(inAcc,LATINUM_POS,finalAmount.toPlainString());
+                finalLat = finalAmount.toPlainString();
+                }
+            }
+        return finalLat;
+        }
+    
+    public String subLatinum(String inAcc, String inAmount)
+        {
+        String finalLat = "LATINUM WAS NOT SET";
+        if(validateAccountNum(inAcc,"subLatinum(String inAcc, String inAmount)"))
+            {
+            if(validateLatinum(inAmount,"subLatinum(String inAcc, String inAmount)"))
+                {
+                BigDecimal originalLatinum = new BigDecimal(readFileLine(inAcc,LATINUM_POS));
+                BigDecimal amountToSub = new BigDecimal(inAmount);
+                BigDecimal finalAmount = originalLatinum.subtract(amountToSub);
+                overwriteLine(inAcc,LATINUM_POS,finalAmount.toPlainString());
+                finalLat = finalAmount.toPlainString();
+                }
+            }
+        return finalLat;
+        }
+    
     public String readName(String inAcc)
         {
-        try
+        if(validateAccountNum(inAcc,"readName(String inAcc)"))
             {
-            Integer.valueOf(inAcc);
             String name = readFileLine(inAcc, NAME_POS);
             return name;
             }
-        catch(NumberFormatException nfe)
+        else
             {
-            dbLog.log(Level.WARNING,"readName(accountNumber) was called but the string provided was not a number: {0}", inAcc);
-            System.err.println("DatabaseInterface.instance.readName(accountNumber) was called but the string provided was not a number: " + inAcc);
             return "invalid";
             }
         }

@@ -125,7 +125,7 @@ public class UserInterface implements Runnable
     
     private void exit()
         {
-        String responce = ConsoleInput.readLine("Are you sure? [Y/n]");
+        String responce = ConsoleInput.readLine("Are you sure you want to shut down the LCX Server? [Y/n]");
         responce = responce.toLowerCase();
         if(responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
             {
@@ -165,25 +165,25 @@ public class UserInterface implements Runnable
         String name;
         String latinum = "0";
         
-        if(args.length == 4)
+        switch (args.length)
             {
-            accountNum = args[0];
-            password = args[1];
-            name = args[2];
-            latinum = args[3];
-            }
-        else if( args.length == 2)
-            {
-            password = args[1];
-            name = args[2];
-            }
-        else
-            { 
-            System.out.println("Argument length was incorrect, create account manually:");
-            accountNum = ConsoleInput.readLine("Please enter new account number:");
-            password = ConsoleInput.readLine("Please enter new account password:");
-            name = ConsoleInput.readLine("Please enter name for new account:");
-            latinum = ConsoleInput.readLine("Please enter latinum for new account:");
+            case 4:
+                accountNum = args[0];
+                password = args[1];
+                name = args[2];
+                latinum = args[3];
+                break;
+            case 2:
+                password = args[1];
+                name = args[2];
+                break;
+            default:
+                System.out.println("Argument length was incorrect, create account manually:");
+                accountNum = ConsoleInput.readLine("Please enter new account number:");
+                password = ConsoleInput.readLine("Please enter new account password:");
+                name = ConsoleInput.readLine("Please enter name for new account:");
+                latinum = ConsoleInput.readLine("Please enter latinum for new account:");
+                break;
             }
         
         try
