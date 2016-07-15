@@ -8,6 +8,7 @@ package lcx.data;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -30,6 +32,7 @@ import shared.UserAccount;
  */
 public class DatabaseInterface
     {
+
     public final static String DB_DIR = "database" + File.separator;
     public final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
     public final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
@@ -41,37 +44,40 @@ public class DatabaseInterface
     public final static Logger dbLog = Logger.getLogger(LCX.class.getName());
     private static FileHandler fh;
     public static String feeMultiplier = "0.001";
-    
+
     //***************************** Static Methods ****************************************************
     public static void setFee(String inFee)
         {
-        if(validateLatinum(inFee,"setFee(String inFee)"))
+        if (validateLatinum(inFee, "setFee(String inFee)"))
             {
             BigDecimal validNumTest = new BigDecimal(inFee);
             feeMultiplier = inFee;
             }
         }
-    
+
     public static String getFee()
         {
         return feeMultiplier;
         }
-    
-    public static boolean validateAccountNum(String inNum,String inSource)
+
+    public static boolean validateAccountNum(String inNum, String inSource)
         {
         try
             {
             int num = Integer.valueOf(inNum);
-            if(num > 100000 && num < 999999)
+            if (num > 100000 && num < 999999)
                 {
                 return true;
                 }
             else
                 {
-                if(!(inSource.equals(EXTERNAL_VALIDATION)))
+                if (!(inSource.equals(EXTERNAL_VALIDATION)))
                     {
                     dbLog.log(Level.WARNING, "An invalid account number (too high, or too low) was passed to the database interface function: "
-                    + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+                            + "{0} The given account number was: {1}", new Object[]
+                                {
+                                inSource, inNum
+                                });
                     }
                 else
                     {
@@ -80,21 +86,24 @@ public class DatabaseInterface
                 return false;
                 }
             }
-        catch(NumberFormatException nfe)
+        catch (NumberFormatException nfe)
             {
-            if(!(inSource.equals(EXTERNAL_VALIDATION)))
-                    {
-                    dbLog.log(Level.WARNING, "An invalid account number (not a number) was passed to the database interface function: "
-                    + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
-                    }
-                else
-                    {
-                    System.err.println("An invalid account number (not a number) was passed to the database interface validate function: " + inNum);
-                    }
+            if (!(inSource.equals(EXTERNAL_VALIDATION)))
+                {
+                dbLog.log(Level.WARNING, "An invalid account number (not a number) was passed to the database interface function: "
+                        + "{0} The given account number was: {1}", new Object[]
+                            {
+                            inSource, inNum
+                            });
+                }
+            else
+                {
+                System.err.println("An invalid account number (not a number) was passed to the database interface validate function: " + inNum);
+                }
             return false;
             }
         }
-    
+
     public static boolean validateLatinum(String inNum, String inSource)
         {
         try
@@ -102,12 +111,15 @@ public class DatabaseInterface
             BigDecimal test = new BigDecimal(inNum);
             return true;
             }
-        catch(NumberFormatException nfe)
+        catch (NumberFormatException nfe)
             {
-            if(!(inSource.equals(EXTERNAL_VALIDATION)))
+            if (!(inSource.equals(EXTERNAL_VALIDATION)))
                 {
                 dbLog.log(Level.WARNING, "An invalid account number was passed to the database interface function: "
-                    + "{0} The given account number was: {1}", new Object[]{inSource, inNum});
+                        + "{0} The given account number was: {1}", new Object[]
+                            {
+                            inSource, inNum
+                            });
                 }
             else
                 {
@@ -139,9 +151,9 @@ public class DatabaseInterface
         try
             {
             int logNumber = 0;
-            while((new File(DB_LOG_DIR + "databaseLog-" + logNumber + ".txt")).exists())
+            while ((new File(DB_LOG_DIR + "databaseLog-" + logNumber + ".txt")).exists())
                 {
-                logNumber++ ;
+                logNumber++;
                 }
             fh = new FileHandler(DB_LOG_DIR + "databaseLog-" + logNumber + ".txt");
             dbLog.addHandler(fh);
@@ -161,16 +173,21 @@ public class DatabaseInterface
     public boolean login(String inAcc, String inPass)
         {
         dbLog.log(Level.FINE, "Server requested login for Account: {0}", inAcc);
+
         boolean validLogin = false;
-        String actualPass = readFileLine(inAcc, PASSWORD_POS);
-        if (inPass.equals(actualPass))
+
+        if (validateAccountNum(inAcc, "login(String inAcc, String inPass)"))
             {
-            dbLog.log(Level.FINE, "Passwords Matched");
-            validLogin = true;
-            }
-        else
-            {
-            dbLog.log(Level.FINE, "Passwords did not Match");
+            String actualPass = readFileLine(inAcc, PASSWORD_POS);
+            if (inPass.equals(actualPass))
+                {
+                dbLog.log(Level.FINE, "Passwords Matched");
+                validLogin = true;
+                }
+            else
+                {
+                dbLog.log(Level.FINE, "Passwords did not Match");
+                }
             }
         return validLogin;
         }
@@ -186,11 +203,17 @@ public class DatabaseInterface
         {
         FileWriter accountWriter;
         BufferedWriter accountWriteBuffer;
-        
+
         dbLog.log(Level.FINE, "Server requested for a new account to be created with Account Number: {0} With Name: {1}", new Object[]
             {
             inAccNum, inName
             });
+
+        if (!validateAccountNum(inAccNum, "createNewAccount(String inAccNum, String inName, String inPass)"))
+            {
+            return;
+            }
+
         try
             {
             accountWriter = new FileWriter(DB_DIR + inAccNum + ".csv", true);
@@ -225,29 +248,43 @@ public class DatabaseInterface
                 });
             }
         }
-    
-    
-    
-    
+
     public boolean transfer(String originNum, String recipientNum, String inAmount)
         {
-        if (!accountNumberExists(originNum) || !accountNumberExists(recipientNum))
-            {
-            dbLog.log(Level.WARNING ,"'Trasnfer from' or 'Transfer to' account did not exist. Transfer failed.");
-            return false;
-            }
-        if(originNum.equals(recipientNum))
-            {
-            dbLog.log(Level.WARNING ,"'Trasnfer from' account was the same as 'Transfer to' account. Transfer failed.");
-            return false;
-            }
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
             {
             originNum, recipientNum, inAmount
             });
-        
-        Transfer transfer = new Transfer(originNum,recipientNum,inAmount,DatabaseInterface.feeMultiplier);
-        
+
+        if (!accountNumberExists(originNum) || !accountNumberExists(recipientNum))
+            {
+            dbLog.log(Level.WARNING, "'Trasnfer from' or 'Transfer to' account did not exist. Transfer failed.");
+            return false;
+            }
+
+        if (originNum.equals(recipientNum))
+            {
+            dbLog.log(Level.WARNING, "'Trasnfer from' account was the same as 'Transfer to' account. Transfer failed.");
+            return false;
+            }
+
+        if (!validateAccountNum(originNum, "transfer(String originNum, String recipientNum, String inAmount)"))
+            {
+            return false;
+            }
+
+        if (!validateAccountNum(recipientNum, "transfer(String originNum, String recipientNum, String inAmount)"))
+            {
+            return false;
+            }
+
+        if (!validateLatinum(inAmount, "transfer(String originNum, String recipientNum, String inAmount)"))
+            {
+            return false;
+            }
+
+        Transfer transfer = new Transfer(originNum, recipientNum, inAmount, DatabaseInterface.feeMultiplier);
+
         return transfer.execute();
         }
 
@@ -262,7 +299,6 @@ public class DatabaseInterface
      */
     private String newAccountNumber()
         {
-
         String newAccountNum;
         do
             {
@@ -271,7 +307,6 @@ public class DatabaseInterface
         while (accountNumberExists(newAccountNum));
 
         return newAccountNum;
-
         }
 
     private boolean accountNumberExists(String an)
@@ -303,63 +338,85 @@ public class DatabaseInterface
         close(0);
         }
 
-    public void writeName(String inAcc, String inName)
+    public boolean writeName(String inAcc, String inName)
         {
-        overwriteLine(inAcc, NAME_POS, inName);
+        boolean complete = false;
+        if (validateAccountNum(inAcc, "writeName(String inAcc, String inName)"))
+            {
+            overwriteLine(inAcc, NAME_POS, inName);
+            complete = true;
+            }
+        return complete;
         }
 
-    public void writeLatinum(String inAcc, String inLatinum)
+    public boolean writeLatinum(String inAcc, String inLatinum)
         {
-        overwriteLine(inAcc, LATINUM_POS, inLatinum);
+        boolean complete = false;
+        if (validateAccountNum(inAcc, "writeLatinum(String inAcc, String inLatinum)"))
+            {
+            if (validateLatinum(inLatinum, "writeLatinum(String inAcc, String inLatinum)"))
+                {
+                overwriteLine(inAcc, LATINUM_POS, inLatinum);
+                complete = true;
+                }
+            }
+        return complete;
         }
 
-    public void writeLatinum(String inAcc, BigDecimal inLatinum)
+    public boolean writeLatinum(String inAcc, BigDecimal inLatinum)
         {
         writeLatinum(inAcc, inLatinum.toPlainString());
+        return true;
         }
 
-    public void writePassword(String inAcc, String inPassword)
+    public boolean writePassword(String inAcc, String inPassword)
         {
-        overwriteLine(inAcc, PASSWORD_POS, inPassword);
+        boolean complete = false;
+        if (validateAccountNum(inAcc, "writePassword(String inAcc, String inPassword)"))
+            {
+            overwriteLine(inAcc, PASSWORD_POS, inPassword);
+            complete = true;
+            }
+        return complete;
         }
-    
+
     public String addLatinum(String inAcc, String inAmount)
         {
         String finalLat = "LATINUM WAS NOT SET";
-        if(validateAccountNum(inAcc,"addLatinum(String inAcc, String inAmount)"))
+        if (validateAccountNum(inAcc, "addLatinum(String inAcc, String inAmount)"))
             {
-            if(validateLatinum(inAmount,"addLatinum(String inAcc, String inAmount)"))
+            if (validateLatinum(inAmount, "addLatinum(String inAcc, String inAmount)"))
                 {
-                BigDecimal originalLatinum = new BigDecimal(readFileLine(inAcc,LATINUM_POS));
+                BigDecimal originalLatinum = new BigDecimal(readFileLine(inAcc, LATINUM_POS));
                 BigDecimal amountToAdd = new BigDecimal(inAmount);
                 BigDecimal finalAmount = originalLatinum.add(amountToAdd);
-                overwriteLine(inAcc,LATINUM_POS,finalAmount.toPlainString());
+                overwriteLine(inAcc, LATINUM_POS, finalAmount.toPlainString());
                 finalLat = finalAmount.toPlainString();
                 }
             }
         return finalLat;
         }
-    
+
     public String subLatinum(String inAcc, String inAmount)
         {
         String finalLat = "LATINUM WAS NOT SET";
-        if(validateAccountNum(inAcc,"subLatinum(String inAcc, String inAmount)"))
+        if (validateAccountNum(inAcc, "subLatinum(String inAcc, String inAmount)"))
             {
-            if(validateLatinum(inAmount,"subLatinum(String inAcc, String inAmount)"))
+            if (validateLatinum(inAmount, "subLatinum(String inAcc, String inAmount)"))
                 {
-                BigDecimal originalLatinum = new BigDecimal(readFileLine(inAcc,LATINUM_POS));
+                BigDecimal originalLatinum = new BigDecimal(readFileLine(inAcc, LATINUM_POS));
                 BigDecimal amountToSub = new BigDecimal(inAmount);
                 BigDecimal finalAmount = originalLatinum.subtract(amountToSub);
-                overwriteLine(inAcc,LATINUM_POS,finalAmount.toPlainString());
+                overwriteLine(inAcc, LATINUM_POS, finalAmount.toPlainString());
                 finalLat = finalAmount.toPlainString();
                 }
             }
         return finalLat;
         }
-    
+
     public String readName(String inAcc)
         {
-        if(validateAccountNum(inAcc,"readName(String inAcc)"))
+        if (validateAccountNum(inAcc, "readName(String inAcc)"))
             {
             String name = readFileLine(inAcc, NAME_POS);
             return name;
@@ -370,30 +427,49 @@ public class DatabaseInterface
             }
         }
 
-    /**
+    /*
      * Return a specific account number when given a username. If no account is
      * found with the provided username, it will return "000000".
      *
-     * @param inName the username of the account to be seached for.
+     * @param inName the username of the account to be searched for.
      * @return a string, the last account number it scans that matches the
      * inName argument, or "000000" if no match is found.
      */
-    private String readAcc(String inName)
+    /*
+    public String[] readAcc(String inName)
         {
-        String acc = "000000";
+        String[] acc = new String[]{"000000"};
         File[] allAccounts = ls(DB_DIR);
-        String[] allAccountNumbers = new String[allAccounts.length];
         for (int i = 0; i < allAccounts.length; i++)
             {
-            allAccountNumbers[i] = allAccounts[i].getName();
-            String name = readName(allAccountNumbers[i]);
-            if (inName.equals(name))
+            if(scanFile(allAccounts[i], inName))
                 {
-                acc = allAccountNumbers[i];
-                break;
+                acc[i] = allAccounts[i].getName().split(".")[0];
                 }
             }
         return acc;
+        }
+    */
+    private boolean scanFile(File file, String string)
+        {
+        boolean wasFound = false;
+        try
+            {
+            final Scanner scanner = new Scanner(file);
+            while (scanner.hasNextLine())
+                {
+                final String lineFromFile = scanner.nextLine();
+                if (lineFromFile.contains(string))
+                    {
+                    wasFound = true;
+                    }
+                }
+            }
+        catch (FileNotFoundException e)
+            {
+            e.printStackTrace();
+            }
+        return wasFound;
         }
 
     public BigDecimal readLatinum(String inAcc)
@@ -413,7 +489,7 @@ public class DatabaseInterface
         String log = "default";
         return log;
         }
-
+    /*
     public UserAccount getAccountFromName(String inName)
         {
         String accountNum = readAcc(inName);
@@ -421,7 +497,7 @@ public class DatabaseInterface
         userAcc.setLatinum(readLatinumString(accountNum));
         return userAcc;
         }
-
+    */
     //***************************** OS/Storage Interface methods | Lowest Level Stuff **********************************
     /*These methods should always be private*/
     private void writeFileAppend()
@@ -512,7 +588,7 @@ public class DatabaseInterface
         {
         FileReader accountReader;
         BufferedReader accountReadBuffer;
-        
+
         String line = "ERROR";
 
         try
@@ -541,7 +617,7 @@ public class DatabaseInterface
         return line;
         }
 
-    private File[] ls(String inDir)
+    public File[] ls(String inDir)
         {
         File folder = new File(DB_DIR);
         File[] listOfFiles = folder.listFiles();
@@ -552,12 +628,9 @@ public class DatabaseInterface
                 {
                 System.out.println("File " + listOfFiles[i].getName());
                 }
-            else
+            else if (listOfFiles[i].isDirectory())
                 {
-                if (listOfFiles[i].isDirectory())
-                    {
-                    System.out.println("Directory " + listOfFiles[i].getName());
-                    }
+                System.out.println("Directory " + listOfFiles[i].getName());
                 }
             }
         return listOfFiles;
