@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package lcx;
+package lcx.data;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,6 +21,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import lcx.LCX;
 import shared.UserAccount;
 
 /**
@@ -29,7 +30,6 @@ import shared.UserAccount;
  */
 public class DatabaseInterface
     {
-
     public final static String DB_DIR = "database" + File.separator;
     public final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
     public final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
@@ -38,13 +38,10 @@ public class DatabaseInterface
     public final static int PASSWORD_POS = 1;
     public final static int NAME_POS = 2;
     public final static int LATINUM_POS = 3;
-    private final static Logger dbLog = Logger.getLogger(LCX.class.getName());
+    public final static Logger dbLog = Logger.getLogger(LCX.class.getName());
     private static FileHandler fh;
     public static String feeMultiplier = "0.001";
-    private FileWriter accountWriter;
-    private BufferedWriter accountWriteBuffer;
-    private FileReader accountReader;
-    private BufferedReader accountReadBuffer;
+    
     //***************************** Static Methods ****************************************************
     public static void setFee(String inFee)
         {
@@ -187,6 +184,9 @@ public class DatabaseInterface
 
     public void createNewAccount(String inAccNum, String inName, String inPass)
         {
+        FileWriter accountWriter;
+        BufferedWriter accountWriteBuffer;
+        
         dbLog.log(Level.FINE, "Server requested for a new account to be created with Account Number: {0} With Name: {1}", new Object[]
             {
             inAccNum, inName
@@ -225,67 +225,30 @@ public class DatabaseInterface
                 });
             }
         }
-
-    public boolean transfer(String inFrom, String inTo, String inAmount)
+    
+    
+    
+    
+    public boolean transfer(String originNum, String recipientNum, String inAmount)
         {
-        if (!accountNumberExists(inFrom) || !accountNumberExists(inTo))
+        if (!accountNumberExists(originNum) || !accountNumberExists(recipientNum))
             {
             dbLog.log(Level.WARNING ,"'Trasnfer from' or 'Transfer to' account did not exist. Transfer failed.");
             return false;
             }
-        if(inFrom.equals(inTo))
+        if(originNum.equals(recipientNum))
             {
             dbLog.log(Level.WARNING ,"'Trasnfer from' account was the same as 'Transfer to' account. Transfer failed.");
             return false;
             }
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
             {
-            inFrom, inTo, inAmount
+            originNum, recipientNum, inAmount
             });
-
-        String fromStartLatinum = readFileLine(inFrom, LATINUM_POS);
-
-        System.out.println("Transfer From Account: " + inFrom + " had: " + fromStartLatinum);
-
-        BigDecimal fromLatinum = new BigDecimal(fromStartLatinum);
-        BigDecimal amount = new BigDecimal(inAmount);
-        BigDecimal fee = new BigDecimal(amount.toPlainString());
-        fee = fee.multiply(new BigDecimal(feeMultiplier));
         
-//Check if the "from account" has enough funs.
-        BigDecimal totalSubtraction = fee.add(amount);
-        BigDecimal totalLatinumAfterTransfer = fromLatinum.subtract(totalSubtraction);
-        if(totalLatinumAfterTransfer.signum() == -1)
-            {
-            return false;
-            }
+        Transfer transfer = new Transfer(originNum,recipientNum,inAmount,DatabaseInterface.feeMultiplier);
         
-        
-        System.out.println("Fee is: " + fee.toPlainString());
-        fromLatinum = fromLatinum.subtract(amount);
-        fromLatinum = fromLatinum.subtract(fee);
-        System.out.println("Transfer From Account: " + inFrom + " now has: " + fromLatinum.toPlainString());
-
-        String toStartLatinum = readFileLine(inTo, LATINUM_POS);
-        System.out.println("Transfer To Account: " + inTo + " had: " + toStartLatinum);
-        BigDecimal toLatinum = new BigDecimal(toStartLatinum);
-        toLatinum = toLatinum.add(amount);
-        System.out.println("Transfer To Account: " + inTo + " now has: " + toLatinum.toPlainString());
-        
-        String bankStartLatinum = readFileLine(LCX_FEE_ACCOUNT_NUMBER, LATINUM_POS);
-        System.out.println("Bank Account had: " + bankStartLatinum);
-        BigDecimal bankLatinum = new BigDecimal(bankStartLatinum);
-        bankLatinum = bankLatinum.add(fee);
-        System.out.println("Bank Account now has: " + bankLatinum.toPlainString());
-
-        System.out.println("Writing 'Transfer From' Account");
-        overwriteLine(inFrom, LATINUM_POS, fromLatinum.toPlainString());
-        System.out.println("Writing 'Transfer To' Account");
-        overwriteLine(inTo, LATINUM_POS, toLatinum.toPlainString());
-        System.out.println("Writing Bank Account");
-        overwriteLine(LCX_FEE_ACCOUNT_NUMBER, LATINUM_POS, bankLatinum.toPlainString());
-
-        return true;
+        return transfer.execute();
         }
 
     /**
@@ -473,6 +436,10 @@ public class DatabaseInterface
 
     private void overwriteLine(String inFileName, int pos, String inLine)
         {
+        FileReader accountReader;
+        BufferedReader accountReadBuffer;
+        FileWriter accountWriter;
+        BufferedWriter accountWriteBuffer;
         try
             {
             dbLog.log(Level.FINER, "Server requested to overwrite line number {0} in file {1}", new Object[]
@@ -543,6 +510,9 @@ public class DatabaseInterface
 
     private String readFileLine(String inAccountNumber, int pos)
         {
+        FileReader accountReader;
+        BufferedReader accountReadBuffer;
+        
         String line = "ERROR";
 
         try
