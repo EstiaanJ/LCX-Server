@@ -166,13 +166,19 @@ public class DatabaseInterface
             {
             inFrom, inTo, inAmount
             });
+        BigDecimal amount = new BigDecimal(inAmount);
+        
+        if(amount.signum() <= 0)
+            {
+            return false;
+            }
 
         String fromStartLatinum = readFileLine(inFrom, LATINUM_POS);
 
         System.out.println("Transfer From Account: " + inFrom + " had: " + fromStartLatinum);
 
         BigDecimal fromLatinum = new BigDecimal(fromStartLatinum);
-        BigDecimal amount = new BigDecimal(inAmount);
+        
         BigDecimal fee = new BigDecimal(amount.toPlainString());
         fee = fee.multiply(new BigDecimal("0.001"));
         
