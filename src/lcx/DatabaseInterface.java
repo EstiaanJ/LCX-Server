@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package lcx.data;
+package lcx;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import org.apache.commons.io.FileUtils;
 import lcx.LCX;
+import lcx.data.Transfer;
 
 /**
  *

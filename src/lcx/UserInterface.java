@@ -5,7 +5,6 @@
  */
 package lcx;
 
-import lcx.data.DatabaseInterface;
 import consoleinput.ConsoleInput;
 import java.math.BigDecimal;
 
