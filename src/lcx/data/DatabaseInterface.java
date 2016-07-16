@@ -13,7 +13,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +25,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import org.apache.commons.io.FileUtils;
 import lcx.LCX;
-import shared.UserAccount;
 
 /**
  *
@@ -33,8 +35,12 @@ import shared.UserAccount;
 public class DatabaseInterface
     {
 
-    public final static String DB_DIR = "database" + File.separator;
+    public final static String DB_MAIN_DIR = "database" + File.separator;
+    public final static String DB_ACC_DIR = "database" + File.separator + "accounts" + File.separator;
     public final static String DB_LOG_DIR = "database" + File.separator + "dblogs" + File.separator;
+    public final static String DB_BACKUP_DIR = "database" + File.separator + "backup" + File.separator;
+    public final static String DB_ACC_BACKUP_DIR = "database" + File.separator + "backup" + File.separator + "accounts" + File.separator;
+
     public final static String LCX_FEE_ACCOUNT_NUMBER = "816192";
     public final static String EXTERNAL_VALIDATION = "EXTERNAL";
     public final static int ACCOUNT_NUM_POS = 0;
@@ -132,16 +138,8 @@ public class DatabaseInterface
     //***************************** Constructors | Standard OO stuff **********************************
     public DatabaseInterface()
         {
-        if (!Files.exists(Paths.get(DB_DIR)))
-            {
-            File dir = new File(DB_DIR);
-            dir.mkdir();
-            }
-        if (!Files.exists(Paths.get(DB_LOG_DIR)))
-            {
-            File dir = new File(DB_LOG_DIR);
-            dir.mkdir();
-            }
+        makeDirs();
+        backupAllAccounts();
 
         if (!(accountNumberExists(LCX_FEE_ACCOUNT_NUMBER)))
             {
@@ -216,7 +214,7 @@ public class DatabaseInterface
 
         try
             {
-            accountWriter = new FileWriter(DB_DIR + inAccNum + ".csv", true);
+            accountWriter = new FileWriter(DB_ACC_DIR + inAccNum + ".csv", true);
             dbLog.log(Level.FINEST, "Created file: {0}.csv", inAccNum);
             accountWriteBuffer = new BufferedWriter(accountWriter);
             accountWriteBuffer.write(inAccNum);
@@ -251,6 +249,7 @@ public class DatabaseInterface
 
     public boolean transfer(String originNum, String recipientNum, String inAmount)
         {
+        boolean didComplete = false;
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
             {
             originNum, recipientNum, inAmount
@@ -283,9 +282,25 @@ public class DatabaseInterface
             return false;
             }
 
-        Transfer transfer = new Transfer(originNum, recipientNum, inAmount, DatabaseInterface.feeMultiplier);
+        File backupOrigin = createTempBackup(DB_ACC_DIR + originNum + ".csv", DB_ACC_BACKUP_DIR);
+        File backupRecipient = createTempBackup(DB_ACC_DIR + recipientNum + ".csv", DB_ACC_BACKUP_DIR);
+        File backupBank = createTempBackup(DB_ACC_DIR + LCX_FEE_ACCOUNT_NUMBER + ".csv", DB_ACC_BACKUP_DIR);
 
-        return transfer.execute();
+        Transfer transfer = new Transfer(originNum, recipientNum, inAmount, DatabaseInterface.feeMultiplier);
+        if (transfer.execute())
+            {
+            didComplete = true;
+            deleteTempBackup(backupOrigin);
+            deleteTempBackup(backupRecipient);
+            deleteTempBackup(backupBank);
+            }
+        else
+            {
+            restoreTempBackup(backupOrigin, DB_ACC_DIR + originNum + ".csv");
+            restoreTempBackup(backupRecipient, DB_ACC_DIR + recipientNum + ".csv");
+            restoreTempBackup(backupBank, DB_ACC_DIR + LCX_FEE_ACCOUNT_NUMBER + ".csv");
+            }
+        return didComplete;
         }
 
     /**
@@ -311,7 +326,7 @@ public class DatabaseInterface
 
     private boolean accountNumberExists(String an)
         {
-        return ((new File(DB_DIR + an + ".csv")).exists());
+        return ((new File(DB_ACC_DIR + an + ".csv")).exists());
         }
     //***************************** Direct Interface Methods | High Level stuff **********************************
 
@@ -435,7 +450,7 @@ public class DatabaseInterface
      * @return a string, the last account number it scans that matches the
      * inName argument, or "000000" if no match is found.
      */
-    /*
+ /*
     public String[] readAcc(String inName)
         {
         String[] acc = new String[]{"000000"};
@@ -444,12 +459,12 @@ public class DatabaseInterface
             {
             if(scanFile(allAccounts[i], inName))
                 {
-                acc[i] = allAccounts[i].getName().split(".")[0];
+                acc[i] = allAccounts[i].getName();
                 }
             }
         return acc;
         }
-    */
+     */
     private boolean scanFile(File file, String string)
         {
         boolean wasFound = false;
@@ -489,6 +504,7 @@ public class DatabaseInterface
         String log = "default";
         return log;
         }
+
     /*
     public UserAccount getAccountFromName(String inName)
         {
@@ -497,7 +513,7 @@ public class DatabaseInterface
         userAcc.setLatinum(readLatinumString(accountNum));
         return userAcc;
         }
-    */
+     */
     //***************************** OS/Storage Interface methods | Lowest Level Stuff **********************************
     /*These methods should always be private*/
     private void writeFileAppend()
@@ -524,7 +540,7 @@ public class DatabaseInterface
                 });
             List<String> allLines = new ArrayList();
             dbLog.log(Level.FINEST, "Opening file as read only {0}.csv", inFileName);
-            accountReader = new FileReader(DB_DIR + inFileName + ".csv");
+            accountReader = new FileReader(DB_ACC_DIR + inFileName + ".csv");
             accountReadBuffer = new BufferedReader(accountReader);
 
             dbLog.log(Level.FINEST, "Reading file into an Array List");
@@ -550,7 +566,7 @@ public class DatabaseInterface
             accountReader.close();
 
             dbLog.log(Level.FINEST, "Opening file to write: {0}", inFileName);
-            accountWriter = new FileWriter(DB_DIR + inFileName + ".csv");
+            accountWriter = new FileWriter(DB_ACC_DIR + inFileName + ".csv");
             accountWriteBuffer = new BufferedWriter(accountWriter);
 
             for (int i = 0; i < allLines.size(); i++)
@@ -594,7 +610,7 @@ public class DatabaseInterface
         try
             {
             dbLog.log(Level.FINEST, "Opening {0} as readOnly", inAccountNumber);
-            accountReader = new FileReader(DB_DIR + inAccountNumber + ".csv");
+            accountReader = new FileReader(DB_ACC_DIR + inAccountNumber + ".csv");
             accountReadBuffer = new BufferedReader(accountReader);
             for (int i = 0; i < pos + 1; i++) //0) Account number, 1) password, 2) name, 3) latinum
                 {
@@ -619,7 +635,7 @@ public class DatabaseInterface
 
     public File[] ls(String inDir)
         {
-        File folder = new File(DB_DIR);
+        File folder = new File(inDir);
         File[] listOfFiles = folder.listFiles();
 
         for (int i = 0; i < listOfFiles.length; i++)
@@ -634,5 +650,124 @@ public class DatabaseInterface
                 }
             }
         return listOfFiles;
+        }
+
+    private File createTempBackup(String fileNameAndPath, String destPath)
+        {
+        String backupExtention = ".tempBak";
+        File source = new File(fileNameAndPath);
+        File dest = new File(destPath + source.getName() + backupExtention);
+
+        try
+            {
+            FileUtils.copyFile(source, dest);
+            }
+        catch (IOException e)
+            {
+            e.printStackTrace();
+            }
+        return dest;
+        }
+
+    private void restoreTempBackup(File file, String originPathAndName)
+        {
+        File source = file;
+        File dest = new File(originPathAndName);
+        try
+            {
+            FileUtils.copyFile(source, dest);
+            deleteTempBackup(file);
+            }
+        catch (IOException e)
+            {
+            e.printStackTrace();
+            }
+        }
+
+    private void deleteTempBackup(File file)
+        {
+        try
+            {
+            Files.delete(file.toPath());
+            }
+        catch (NoSuchFileException x)
+            {
+            System.err.format("%s: no such" + " file or directory%n", file.toPath());
+            }
+        catch (DirectoryNotEmptyException x)
+            {
+            System.err.format("%s not empty%n", file.toPath());
+            }
+        catch (IOException x)
+            {
+            // File permission problems are caught here.
+            System.err.println(x);
+            }
+        }
+
+    private void backupAllAccounts()
+        {
+        String backupExtention = ".sysBak";
+        File[] accounts = ls(DB_ACC_DIR);
+        for (int i = 0; i < accounts.length; i++)
+            {
+            int uniqueFileNum = 0;
+
+            File dest = new File(DB_ACC_BACKUP_DIR + accounts[i].getName() + "." + uniqueFileNum + backupExtention);
+
+            while (dest.exists())
+                {
+                uniqueFileNum++;
+                dest = new File(DB_ACC_BACKUP_DIR + accounts[i].getName() + "." + uniqueFileNum + backupExtention);
+                }
+
+            File source = accounts[i];
+            try
+                {
+                FileUtils.copyFile(source, dest);
+                }
+            catch (IOException e)
+                {
+                e.printStackTrace();
+                }
+            }
+        }
+
+    private static void makeDirs()
+        {
+        //If it doesn't exist make the database directory
+        if (!Files.exists(Paths.get(DB_MAIN_DIR)))
+            {
+            File dir = new File(DB_MAIN_DIR);
+            dir.mkdir();
+            }
+
+        //If it doesn't exist make the accounts directory
+        if (!Files.exists(Paths.get(DB_ACC_DIR)))
+            {
+            File dir = new File(DB_ACC_DIR);
+            dir.mkdir();
+            }
+
+        //If it doesn't exist make the database log directory
+        if (!Files.exists(Paths.get(DB_LOG_DIR)))
+            {
+            File dir = new File(DB_LOG_DIR);
+            dir.mkdir();
+            }
+
+        //If it doesn't exist make the database backup directory
+        if (!Files.exists(Paths.get(DB_BACKUP_DIR)))
+            {
+            File dir = new File(DB_BACKUP_DIR);
+            dir.mkdir();
+            }
+
+        //If it doesn't exist make the account backup directory
+        if (!Files.exists(Paths.get(DB_ACC_BACKUP_DIR)))
+            {
+            File dir = new File(DB_ACC_BACKUP_DIR);
+            dir.mkdir();
+            }
         }
     }

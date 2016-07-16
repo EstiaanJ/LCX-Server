@@ -1,8 +1,0 @@
-Jul 14, 2016 1:31:08 PM lcx.LCX main
-INFO: Server running. Version: 0.2
-Jul 14, 2016 1:31:08 PM lcx.LCX main
-INFO: Communication protocol version: 0.1
-Jul 14, 2016 1:31:08 PM lcx.LCX listenSocket
-FINE: Ready for clients.
-Jul 14, 2016 1:31:08 PM lcx.LCX listenSocket
-INFO: Waiting for client...

@@ -1,4 +1,0 @@
-Jul 14, 2016 2:56:36 PM lcx.LCX listenSocket
-FINE: Ready for clients.
-Jul 14, 2016 2:56:36 PM lcx.LCX listenSocket
-FINE: Waiting for client...
