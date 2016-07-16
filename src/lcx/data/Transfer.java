@@ -119,12 +119,7 @@ public class Transfer
                 didComplete = writeLatinum();
                 }
             }
-        return false;//didComplete;
-        }
-    
-    private boolean writeLatinum2()
-        {
-        return true;
+        return didComplete;
         }
     
     private boolean writeLatinum()
@@ -216,6 +211,7 @@ public class Transfer
     
     private boolean doMath()
         {
+        boolean didComplete = false;
         BigDecimal feeMultiplier = new BigDecimal(feeFraction);
         BigDecimal originStartMoney = new BigDecimal(originStartLatinum);
         BigDecimal recipientStartMoney = new BigDecimal(recipientStartLatinum);
@@ -226,13 +222,20 @@ public class Transfer
         BigDecimal totalSubtract = transferMoney.add(totalFee);
         
         BigDecimal originFinalMoney = originStartMoney.subtract(totalSubtract);
+        
+        if(originFinalMoney.signum() == -1)
+            {
+            didComplete = false;
+            }
+        
         BigDecimal recipientFinalMoney = recipientStartMoney.add(transferMoney);
         BigDecimal bankFinalMoney = bankStartMoney.add(totalFee);
         
         originFinalLatinum = originFinalMoney.toPlainString();
         recipientFinalLatinum = recipientFinalMoney.toPlainString();
         bankFinalLatinum = bankFinalMoney.toPlainString();
-        return true;
+        
+        return didComplete;
         }
     
     private boolean readLatinum()

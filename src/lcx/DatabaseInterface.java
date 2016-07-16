@@ -255,6 +255,12 @@ public class DatabaseInterface
             {
             originNum, recipientNum, inAmount
             });
+        BigDecimal amount = new BigDecimal(inAmount);
+        
+        if(amount.signum() <= 0)
+            {
+            return false;
+            }
 
         if (!accountNumberExists(originNum) || !accountNumberExists(recipientNum))
             {
