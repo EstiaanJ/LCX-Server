@@ -51,7 +51,6 @@ public class Transfer
     
     public Transfer(String inOrigin,String inRecipient,String inAmount,String inFee)
         {
-        
         if (!Files.exists(Paths.get(TRANSFER_LOG_DIR)))
             {
             File dir = new File(TRANSFER_LOG_DIR);
@@ -107,22 +106,32 @@ public class Transfer
             {
             feeFraction = "0.001";
             validTransfer = false;
-            transLog.log(Level.SEVERE, "Fee was invalid!");
+            transLog.log(Level.SEVERE, "Fee was invalid: Not a number");
             DatabaseInterface.dbLog.severe("LCX Fee was invalid!");
             lcx.LCX.systemLog.log(Level.SEVERE,"LCX Fee was invalid!");
             }
         
         if(DatabaseInterface.validateLatinum(inAmount, "Transfer <init>"))
             {
-            amount = inAmount;
+            BigDecimal test = new BigDecimal(inAmount);
+            if(test.signum() <= 0)
+                {
+                amount = "0";
+                validTransfer = false;
+                transLog.log(Level.SEVERE, "Transfer amount was invalid: amount was negative!");
+                }
+            else
+                {
+                amount = inAmount;
+                }
             }
         else
             {
             amount = "0";
             validTransfer = false;
-            transLog.log(Level.SEVERE, "Transfer amount was invalid!");
+            transLog.log(Level.SEVERE, "Transfer amount was invalid: Not a number");
             }
-        
+
         if(validTransfer)
             {
             transLog.log(Level.FINER, "Done validating transfer...");
@@ -137,12 +146,17 @@ public class Transfer
     public boolean execute()
         {
         boolean didComplete = false;
-        if(readLatinum())
+        /*The reason for the nesting is to remove any ambiguity 
+        around the execution order of readLatinum(), doMath() and writeLatinum()
+        */
+        if(validTransfer)
             {
-            System.out.println(bankStartLatinum);
-            if(doMath())
+            if(readLatinum())
                 {
-                didComplete = writeLatinum();
+                if(doMath())
+                    {
+                    didComplete = writeLatinum();
+                    }
                 }
             }
         return didComplete;
@@ -192,10 +206,8 @@ public class Transfer
                     BufferedWriter bufferedOrigin = new BufferedWriter(writerOrigin);
                     BufferedWriter bufferedRecipient = new BufferedWriter(writerRecipient);
                     BufferedWriter bufferedBank = new BufferedWriter(writerBank);
-                    System.out.println(originFinalLatinum);
                     for (int i = 0; i < originLines.size(); i++)
                         {
-                        System.out.println(i);
                         bufferedOrigin.write(originLines.get(i));
                         bufferedRecipient.write(recipientLines.get(i));
                         bufferedBank.write(bankLines.get(i));
@@ -224,6 +236,7 @@ public class Transfer
                             + "the origin account was: {0} the recipient account was: {1}", 
                             new Object[]{originAccount, recipientAccount});
                     e.printStackTrace();
+                    //System.out.println("WAS HERE! :/");
                     return false;
                     }
                 }
@@ -243,15 +256,17 @@ public class Transfer
                             + "the origin account was: {0} the recipient account was: {1}", 
                             new Object[]{originAccount, recipientAccount});
             e.printStackTrace();
+            //System.out.println("WAS HERE! :/");
             return false;
             }
+        //System.out.println("WAS HERE!");
         return true;
         }
     
     private boolean doMath()
         {
         long mathStartNano = System.nanoTime();
-        boolean didComplete = false;
+        boolean didComplete = true;
         BigDecimal feeMultiplier = new BigDecimal(feeFraction);
         BigDecimal originStartMoney = new BigDecimal(originStartLatinum);
         BigDecimal recipientStartMoney = new BigDecimal(recipientStartLatinum);
@@ -266,6 +281,7 @@ public class Transfer
         if(originFinalMoney.signum() == -1)
             {
             didComplete = false;
+            transLog.log(Level.WARNING, "The transfer is being canceled: Not enough money to complete!");
             }
         
         BigDecimal recipientFinalMoney = recipientStartMoney.add(transferMoney);
@@ -307,7 +323,6 @@ public class Transfer
             transLog.log(Level.FINE, "Read origin account, latinum is: {0}", originStartLatinum);
             transLog.log(Level.FINE, "Read recipient account, latinum is: {0}", recipientStartLatinum);
             transLog.log(Level.FINE, "Read bank account, latinum is: {0}", bankStartLatinum);
-            System.out.println(bankStartLatinum);
             
             readerOrigin.close();
             readerRecipient.close();

@@ -43,14 +43,7 @@ public class TransferTest
 
     public static void tearDownClass()
         {
-        DatabaseInterface cleanupDB = new DatabaseInterface();
-        File allFiles[] = cleanupDB.ls(DatabaseInterface.DB_ACC_DIR);
-        File alldbLogs[] = cleanupDB.ls(DatabaseInterface.DB_LOG_DIR);
-        for(int i = 0; i < allFiles.length; i++)
-            {
-            rm(allFiles[i]);
-            }
-        dbif.close();
+        
         }
 
     
@@ -64,6 +57,11 @@ public class TransferTest
     @After
     public void tearDown()
         {
+        File allFiles[] = dbif.ls(DatabaseInterface.DB_ACC_DIR);
+        for(int i = 0; i < allFiles.length; i++)
+            {
+            rm(allFiles[i]);
+            }
         dbif.close();
         }
 
@@ -75,120 +73,137 @@ public class TransferTest
         {
         System.out.println("testing execute() with valid values: ");
         
-        String firstAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
-        String secondAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
+        String originAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
+        String recipAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
         
-        dbif.addLatinum(firstAcc, "2");
+        dbif.addLatinum(originAcc, "2");
         
         String testAmount = "1";
         
-        Transfer transfer = new Transfer(firstAcc,secondAcc,testAmount,DatabaseInterface.getFee());
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
         boolean expResult = true;
         boolean result = transfer.execute();
+        
+        
         assertEquals(expResult, result);
+        
+        String originFinalLat = dbif.readLatinumString(originAcc);
+        String recipFinalLat = dbif.readLatinumString(recipAcc);
+        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        
+        assertEquals(originFinalLat,"0.999");
+        assertEquals(recipFinalLat,"1");
+        assertEquals(bankFinalLat,"0.001");
         }
     
-    public void testExecuteValidLarge()
-        {
-        System.out.println("testing execute() with very large valid values: ");
-        
-        String firstAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
-        String secondAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
-        
-        dbif.addLatinum(firstAcc, "2");
-        
-        String testAmount = "100000000000000000000000000";
-        
-        Transfer transfer = new Transfer(firstAcc,secondAcc,testAmount,DatabaseInterface.getFee());
-        boolean expResult = true;
-        boolean result = transfer.execute();
-        assertEquals(expResult, result);
-        }
-    
-    public void testExecuteSmall()
-        {
-        System.out.println("testing execute() with very small valid values: ");
-        
-        String firstAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
-        String secondAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
-        
-        dbif.addLatinum(firstAcc, "2");
-        
-        String testAmount = "0.000000000000001";
-        
-        Transfer transfer = new Transfer(firstAcc,secondAcc,testAmount,DatabaseInterface.getFee());
-        boolean expResult = true;
-        boolean result = transfer.execute();
-        assertEquals(expResult, result);
-        }
     
     @Test
     public void testExecuteInvalidNegative()
         {
         System.out.println("testing execute() with negative transfer: ");
         
-        String firstAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
-        String secondAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
+        String originAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
+        String recipAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
         
-        dbif.addLatinum(firstAcc, "2");
+        dbif.addLatinum(originAcc, "2");
         
         String testAmount = "-1";
         
-        Transfer transfer = new Transfer(firstAcc,secondAcc,testAmount,DatabaseInterface.getFee());
-        boolean expResult = true;
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        boolean expResult = false;
         boolean result = transfer.execute();
+        
+        
         assertEquals(expResult, result);
+        
+        String originFinalLat = dbif.readLatinumString(originAcc);
+        String recipFinalLat = dbif.readLatinumString(recipAcc);
+        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        
+        assertEquals(originFinalLat,"2");
+        assertEquals(recipFinalLat,"0");
+        assertEquals(bankFinalLat,"0");
         }
     
+    @Test
     public void testExecuteInvalidZero()
         {
         System.out.println("testing execute() with zero transfer: ");
         
-        String firstAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
-        String secondAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
+        String originAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
+        String recipAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
         
-        dbif.addLatinum(firstAcc, "2");
+        dbif.addLatinum(originAcc, "2");
         
         String testAmount = "0";
         
-        Transfer transfer = new Transfer(firstAcc,secondAcc,testAmount,DatabaseInterface.getFee());
-        boolean expResult = true;
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        boolean expResult = false;
         boolean result = transfer.execute();
+        
         assertEquals(expResult, result);
+        
+        String originFinalLat = dbif.readLatinumString(originAcc);
+        String recipFinalLat = dbif.readLatinumString(recipAcc);
+        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        
+        assertEquals(originFinalLat,"2");
+        assertEquals(recipFinalLat,"0");
+        assertEquals(bankFinalLat,"0");
         }
     
+    @Test
     public void testExecuteInvalidNotEnoughFunds()
         {
         System.out.println("testing execute() with not enough funds: ");
         
-        String firstAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
-        String secondAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
+        String originAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
+        String recipAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
         
-        dbif.addLatinum(firstAcc, "2");
+        dbif.addLatinum(originAcc, "2");
         
         String testAmount = "5";
         
-        Transfer transfer = new Transfer(firstAcc,secondAcc,testAmount,DatabaseInterface.getFee());
-        boolean expResult = true;
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        boolean expResult = false;
         boolean result = transfer.execute();
+        
         assertEquals(expResult, result);
+        
+        String originFinalLat = dbif.readLatinumString(originAcc);
+        String recipFinalLat = dbif.readLatinumString(recipAcc);
+        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        
+        assertEquals(originFinalLat,"2");
+        assertEquals(recipFinalLat,"0");
+        assertEquals(bankFinalLat,"0");
         }
     
-    public void testExecuteInvalidNotEnoughFunds2()
+    
+    @Test
+    public void testExecuteInvalidNotEnoughFundsTwo()
         {
         System.out.println("testing execute() with not enough funds to pay fee (but enough for transfer): ");
         
-        String firstAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
-        String secondAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
+        String originAcc = dbif.createNewAccount(TEST_NAME_ONE, TEST_PASS_ONE);
+        String recipAcc = dbif.createNewAccount(TEST_NAME_TWO, TEST_PASS_TWO);
         
-        dbif.addLatinum(firstAcc, "2");
+        dbif.addLatinum(originAcc, "2");
         
         String testAmount = "2";
         
-        Transfer transfer = new Transfer(firstAcc,secondAcc,testAmount,DatabaseInterface.getFee());
-        boolean expResult = true;
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        boolean expResult = false;
         boolean result = transfer.execute();
+        
         assertEquals(expResult, result);
+        String originFinalLat = dbif.readLatinumString(originAcc);
+        String recipFinalLat = dbif.readLatinumString(recipAcc);
+        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        
+        assertEquals(originFinalLat,"2");
+        assertEquals(recipFinalLat,"0");
+        assertEquals(bankFinalLat,"0");
         }
     
     
