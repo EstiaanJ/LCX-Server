@@ -251,10 +251,12 @@ public class DatabaseInterface
     public boolean transfer(String originNum, String recipientNum, String inAmount)
         {
         boolean didComplete = false;
+        
         dbLog.log(Level.FINE, "Server requested transfer from: {0} to: {1} Ammount: {2}", new Object[]
             {
             originNum, recipientNum, inAmount
             });
+        
         BigDecimal amount = new BigDecimal(inAmount);
         
         if(amount.signum() <= 0)
@@ -294,6 +296,7 @@ public class DatabaseInterface
         File backupBank = createTempBackup(DB_ACC_DIR + LCX_FEE_ACCOUNT_NUMBER + ".csv", DB_ACC_BACKUP_DIR);
 
         Transfer transfer = new Transfer(originNum, recipientNum, inAmount, DatabaseInterface.feeMultiplier);
+        
         if (transfer.execute())
             {
             didComplete = true;
