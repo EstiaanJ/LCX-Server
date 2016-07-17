@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package lcx.data;
+package lcx;
 
 import lcx.DatabaseInterface;
 import java.io.BufferedReader;
@@ -66,7 +66,7 @@ public class Transfer
                 }
             fh = new FileHandler(TRANSFER_LOG_DIR + "transferLog-" + logNumber + ".txt");
             transLog.addHandler(fh);
-            SimpleFormatter formatter = new SimpleFormatter();
+            CustomFormatter formatter = new CustomFormatter();
             fh.setFormatter(formatter);
             transLog.setLevel(Level.ALL);
             }

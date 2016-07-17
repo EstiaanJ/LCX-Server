@@ -22,7 +22,7 @@ import java.util.logging.SimpleFormatter;
  */
 public class LCX extends Thread
     {
-    public static final String SERVER_VERSION = "0.2";
+    public static final String SERVER_VERSION = "0.3.b0"; //b is for bugfix version.
     public static final ConsoleHandler conHandle = new ConsoleHandler();
     public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
     public static FileHandler fileHandler;
@@ -61,7 +61,7 @@ public class LCX extends Thread
     
     public void listenSockets()
         {
-        while(isListening)
+        while(true)
             {
             systemLog.log(Level.FINE, "Waiting for client...");
             ServerSocketThread server;
@@ -92,6 +92,9 @@ public class LCX extends Thread
         //Only messages that are fine or above, and are attached to this handler will print to console.
         conHandle.setLevel(Level.FINE);
         
+        systemLog.addHandler(conHandle);
+        //DatabaseInterface.dbLog.addHandler(conHandle);
+        //Transfer.transLog.addHandler(conHandle);
         /*Try to create a file handler for systemLog, 
         make systemLog handled by the conHandle and fileHandler
         so that that messages to the console, and the log file can be
@@ -100,8 +103,6 @@ public class LCX extends Thread
         */
         try
             {
-            systemLog.addHandler(conHandle);
-            
             int logNumber = 0;
             while((new File("log-" + logNumber + ".txt")).exists())
                 {
@@ -110,8 +111,9 @@ public class LCX extends Thread
             fileHandler = new FileHandler("log-" + logNumber + ".txt");
             systemLog.addHandler(fileHandler);
             
-            SimpleFormatter formatter = new SimpleFormatter();
+            CustomFormatter formatter = new CustomFormatter();
             fileHandler.setFormatter(formatter);
+            conHandle.setFormatter(formatter);
             
             systemLog.setLevel(Level.ALL);
             fileHandler.setLevel(Level.ALL);
@@ -151,7 +153,7 @@ public class LCX extends Thread
             System.exit(-1);
             }
         }
-    
+    /*
     public static void startListening()
         {
         setIsListening(true);
@@ -168,5 +170,5 @@ public class LCX extends Thread
         {
         return isListening;
         }
-    
+    */
     }

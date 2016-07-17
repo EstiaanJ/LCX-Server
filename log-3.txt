@@ -1,0 +1,4 @@
+17/07/2016 01:26:37.916 - [main] - [INFO] - 	Server running. Version: 0.2
+17/07/2016 01:26:37.916 - [main] - [INFO] - 	Communication protocol version: 0.1
+17/07/2016 01:26:37.999 - [setupSockets] - [FINE] - 	Ready for clients.
+17/07/2016 01:26:37.999 - [listenSockets] - [FINE] - 	Waiting for client...

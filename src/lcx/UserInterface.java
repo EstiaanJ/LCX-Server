@@ -8,7 +8,6 @@ package lcx;
 import consoleinput.ConsoleInput;
 import java.math.BigDecimal;
 import java.util.logging.Level;
-import lcx.data.Transfer;
 
 /**
  *
@@ -50,10 +49,11 @@ public class UserInterface implements Runnable
         String[] userInput;
         while (true)
             {
-            System.out.println("---");
+            System.out.println("-------------------");
             System.out.println("Ready for new command: ");
 
             String message = ConsoleInput.readLine();
+            System.out.println("___________________");
             userInput = message.split(" ");
 
             String command = userInput[0];
@@ -153,7 +153,8 @@ public class UserInterface implements Runnable
 
     private void stopListening()
         {
-        LCX.setIsListening(false);
+        //LCX.setIsListening(false);
+        System.out.println("This function is not ready yet");
         }
 
     private void setLevel(String[] args)
@@ -287,7 +288,8 @@ public class UserInterface implements Runnable
 
     private void startListening()
         {
-        LCX.startListening();
+        //LCX.startListening();
+        System.out.println("This function is not ready yet");
         }
 
     private void backup()
@@ -319,8 +321,8 @@ public class UserInterface implements Runnable
                 latinum = args[3];
                 break;
             case 2:
-                password = args[1];
-                name = args[2];
+                password = args[0];
+                name = args[1];
                 break;
             default:
                 System.out.println("Argument length was incorrect, create account manually:");
@@ -475,7 +477,7 @@ public class UserInterface implements Runnable
         if (args[0].equals("-c"))
             {
             System.out.println();
-            System.out.println("-------------------------------------------");
+            System.out.println("...............................................................");
             System.out.println("This is a list of all commands. For details on using a specific command enter: " + HELP + " [command]");
             System.out.println();
             System.out.println(UserInterface.ADD_LATINUM);
@@ -497,7 +499,7 @@ public class UserInterface implements Runnable
             System.out.println(UserInterface.STOP_LISTEN);
             System.out.println(UserInterface.SUB_LATINUM);
             System.out.println(UserInterface.VERSION);
-            System.out.println("-------------------------------------------");
+            System.out.println("...............................................................");
             }
         else if(args[0].equals("-a"))
             {
@@ -509,7 +511,7 @@ public class UserInterface implements Runnable
             }
         else if(args[0].equals("-b"))
             {
-            LCX.databaseIF.ls(DatabaseInterface.DB_BACKUP_DIR);
+            LCX.databaseIF.ls(DatabaseInterface.DB_ACC_BACKUP_DIR);
             }
         else
             {

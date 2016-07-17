@@ -1,0 +1,10 @@
+17/07/2016 01:18:19.321 - [main] - [INFO] - 	Server running. Version: 0.2
+17/07/2016 01:18:19.324 - [main] - [INFO] - 	Communication protocol version: 0.1
+17/07/2016 01:18:19.333 - [createNewAccount] - [FINE] - 	Server requested for a new account to be created with Account Number: 816192 With Name: LCX
+17/07/2016 01:18:19.336 - [createNewAccount] - [FINEST] - 	Created file: 816192.csv
+17/07/2016 01:18:19.336 - [createNewAccount] - [FINEST] - 	Wrote Account Number: 816192 to memory for file: 816192.csv
+17/07/2016 01:18:19.337 - [createNewAccount] - [FINEST] - 	Wrote Password to memory for file: 816192.csv
+17/07/2016 01:18:19.337 - [createNewAccount] - [FINEST] - 	Wrote Name: LCX to memory for file: 816192.csv
+17/07/2016 01:18:19.338 - [createNewAccount] - [FINEST] - 	Wrote all changes from memory to file: 816192.csv
+17/07/2016 01:18:19.358 - [setupSockets] - [FINE] - 	Ready for clients.
+17/07/2016 01:18:34.006 - [listenSockets] - [FINE] - 	Waiting for client...

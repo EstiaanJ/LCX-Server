@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import org.apache.commons.io.FileUtils;
 import lcx.LCX;
-import lcx.data.Transfer;
 
 /**
  *
@@ -156,7 +155,7 @@ public class DatabaseInterface
                 }
             fh = new FileHandler(DB_LOG_DIR + "databaseLog-" + logNumber + ".txt");
             dbLog.addHandler(fh);
-            SimpleFormatter formatter = new SimpleFormatter();
+            CustomFormatter formatter = new CustomFormatter();
             fh.setFormatter(formatter);
             dbLog.setLevel(Level.ALL);
             }
@@ -719,6 +718,7 @@ public class DatabaseInterface
         {
         boolean didComplete = false;
         String backupExtention = ".sysBak";
+        System.out.println("Backing up the following files: ");
         File[] accounts = ls(DB_ACC_DIR);
         for (int i = 0; i < accounts.length; i++)
             {
