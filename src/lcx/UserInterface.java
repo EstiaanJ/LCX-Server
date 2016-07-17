@@ -7,6 +7,8 @@ package lcx;
 
 import consoleinput.ConsoleInput;
 import java.math.BigDecimal;
+import java.util.logging.Level;
+import lcx.data.Transfer;
 
 /**
  *
@@ -19,13 +21,14 @@ public class UserInterface implements Runnable
     final static String STOP_LISTEN = "stopListening";
     final static String SET_LEVEL = "setLevel"; //setLevel [log] [level] where log is systemLog or databaseLog and level is any of the log level strings
     final static String START_LISTEN = "startListening";
+    final static String BACKUP = "backup";
     final static String CREATE_ACCOUNT = "createAccount";   //CreateAccount [Account Num] [Password] [Name] [Latinum]
     final static String SET_LATINUM = "setLatinum"; //SetLatinum [Account Num] [Latinum]
     final static String SET_PASS = "setPassword"; //SetPassword [Account Num] [Password]
     final static String SET_NAME = "setName";//SetName [Account Num] [Name]
     final static String HELP = "help";//help [Command] or just help for list of commands
     final static String HELP2 = "Help";//Help [Command] or just help for list of commands
-    final static String LIST = "ls"; // ls [Flag] where -a is accounts, -c is commands -d is database logs and -s is system logs.
+    final static String LIST = "ls"; // ls [Flag] where -a is accounts, -c is commands -d is database logs and -b for backups.
     final static String VERSION = "version";//version [Flag] where -s is server version, -l is shared library version and -p is protocal version
     final static String ADD_LATINUM = "addLatinum"; //addLatinum [Account Num]
     final static String SUB_LATINUM = "subLatinum"; //subLatinum [Account Num]
@@ -35,10 +38,10 @@ public class UserInterface implements Runnable
     final static String GET_NAME = "getName";//getName [Account Num]
     final static String GET_ACCOUNT = "getAccount";//getAccount [Name]
     final static String GET_LATINUM = "getLatinum"; //getLatinum [Account Num]
-    final static String CONFIRM1 = "y";
-    final static String CONFIRM2 = "yes";
-    final static String NEGATIVE1 = "n";
-    final static String NEGATIVE2 = "no";
+    final static String CONFIRM_ONE = "y";
+    final static String CONFIRM_TWO = "yes";
+    final static String NEGATIVE_ONE = "n";
+    final static String NEGATIVE_TWO = "no";
     //final static String NO_ARG = "#";
 
     @Override
@@ -68,6 +71,9 @@ public class UserInterface implements Runnable
                     break;
                 case START_LISTEN:
                     startListening();
+                    break;
+                case BACKUP:
+                    backup();
                     break;
                 case CREATE_ACCOUNT:
                     createAccount(userInput);
@@ -130,7 +136,7 @@ public class UserInterface implements Runnable
         {
         String responce = ConsoleInput.readLine("Are you sure you want to shut down the LCX Server? [Y/n]");
         responce = responce.toLowerCase();
-        if (responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
+        if (responce.equals(CONFIRM_ONE) || responce.equals(CONFIRM_TWO))
             {
             System.exit(0);
             }
@@ -152,7 +158,131 @@ public class UserInterface implements Runnable
 
     private void setLevel(String[] args)
         {
-        System.out.println("Not implemented yet.");
+        String log;
+        String level;
+        
+        if(args.length < 2)
+            {
+            log = ConsoleInput.readLine("Please enter the log you wish to chage: ");
+            level = ConsoleInput.readLine("Please enter the level you wish to set it to: ");
+            }
+        else
+            {
+            log = args[0];
+            level = args[1];
+            }
+        log = log.toLowerCase();
+        switch(log)
+            {
+        case "systemlog":
+            switch(level)
+               {
+            case "severe":
+               LCX.systemLog.setLevel(Level.SEVERE);
+               break;
+            case "warning":
+               LCX.systemLog.setLevel(Level.WARNING);
+               break;
+            case "fine":
+               LCX.systemLog.setLevel(Level.FINE);
+               break;
+            case "finer":
+               LCX.systemLog.setLevel(Level.FINER);
+               break;
+            case "finest":
+               LCX.systemLog.setLevel(Level.FINEST);
+               break;
+            case "off":
+               LCX.systemLog.setLevel(Level.OFF);
+               break;
+            case "all":
+               LCX.systemLog.setLevel(Level.ALL);
+               break;
+            case "info":
+               LCX.systemLog.setLevel(Level.INFO);
+               break;
+            case "config":
+               LCX.systemLog.setLevel(Level.CONFIG);
+               break;
+            default:
+               System.out.println("An invalid log level was entered: " + log);
+               System.out.println("The log identifiers are: 'severe', 'warning','info', 'fine, 'finer', 'finest', 'config', 'off', 'all'");
+               }
+            break;
+        case "databaselog":
+            switch(level)
+               {
+            case "severe":
+               DatabaseInterface.dbLog.setLevel(Level.SEVERE);
+               break;
+            case "warning":
+               DatabaseInterface.dbLog.setLevel(Level.WARNING);
+               break;
+            case "fine":
+               DatabaseInterface.dbLog.setLevel(Level.FINE);
+               break;
+            case "finer":
+               DatabaseInterface.dbLog.setLevel(Level.FINER);
+               break;
+            case "finest":
+               DatabaseInterface.dbLog.setLevel(Level.FINEST);
+               break;
+            case "off":
+               DatabaseInterface.dbLog.setLevel(Level.OFF);
+               break;
+            case "all":
+               DatabaseInterface.dbLog.setLevel(Level.ALL);
+               break;
+            case "info":
+               DatabaseInterface.dbLog.setLevel(Level.INFO);
+               break;
+            case "config":
+               DatabaseInterface.dbLog.setLevel(Level.CONFIG);
+               break;
+            default:
+               System.out.println("An invalid log level was entered: " + log);
+               System.out.println("The log identifiers are: 'severe', 'warning','info', 'fine, 'finer', 'finest', 'config', 'off', 'all'");
+               }
+            break;
+        case "transferlog":
+            switch(level)
+               {
+            case "severe":
+               Transfer.transLog.setLevel(Level.SEVERE);
+               break;
+            case "warning":
+               Transfer.transLog.setLevel(Level.WARNING);
+               break;
+            case "fine":
+               Transfer.transLog.setLevel(Level.FINE);
+               break;
+            case "finer":
+               Transfer.transLog.setLevel(Level.FINER);
+               break;
+            case "finest":
+               Transfer.transLog.setLevel(Level.FINEST);
+               break;
+            case "off":
+               Transfer.transLog.setLevel(Level.OFF);
+               break;
+            case "all":
+               Transfer.transLog.setLevel(Level.ALL);
+               break;
+            case "info":
+               Transfer.transLog.setLevel(Level.INFO);
+               break;
+            case "config":
+               Transfer.transLog.setLevel(Level.CONFIG);
+               break;
+            default:
+               System.out.println("An invalid log level was entered: " + log);
+               System.out.println("The log identifiers are: 'severe', 'warning','info', 'fine, 'finer', 'finest', 'config', 'off', 'all'");
+               }
+            break;
+        default:
+            System.out.println("An invalid log identifier was entered: " + log);
+            System.out.println("The log identifiers are: 'systemLog', 'databaseLog','transferLog'");
+            }
         }
 
     private void startListening()
@@ -160,6 +290,18 @@ public class UserInterface implements Runnable
         LCX.startListening();
         }
 
+    private void backup()
+        {
+        if(LCX.databaseIF.backupAllAccounts())
+            {
+            System.out.println("All accounts have been backedup.");
+            }
+        else
+            {
+            System.err.println("Bacukp appears to have failed!");
+            }
+        }
+    
     private void createAccount(String[] args)
         {
         final String auto = "Automatically generated";
@@ -200,7 +342,7 @@ public class UserInterface implements Runnable
             String confirm = ConsoleInput.readLine("Confirm new account? [Y/n]");
             confirm = confirm.toLowerCase();
 
-            if (confirm.equals(CONFIRM1) || confirm.equals(CONFIRM2))
+            if (confirm.equals(CONFIRM_ONE) || confirm.equals(CONFIRM_TWO))
                 {
                 if (accountNum.equals(auto))
                     {
@@ -220,7 +362,7 @@ public class UserInterface implements Runnable
             else
                 {
                 String responce = ConsoleInput.readLine("Would you like to cancel new account? [Y/n]");
-                if (responce.equals(CONFIRM1) || responce.equals(CONFIRM2))
+                if (responce.equals(CONFIRM_ONE) || responce.equals(CONFIRM_TWO))
                     {
 
                     }
@@ -323,7 +465,13 @@ public class UserInterface implements Runnable
         if (args.length < 1)
             {
             System.out.println("This command requires a flag!");
+            return;
             }
+        else
+            {
+            args[0] = args[0].toLowerCase();
+            }
+        
         if (args[0].equals("-c"))
             {
             System.out.println();
@@ -351,11 +499,22 @@ public class UserInterface implements Runnable
             System.out.println(UserInterface.VERSION);
             System.out.println("-------------------------------------------");
             }
+        else if(args[0].equals("-a"))
+            {
+            LCX.databaseIF.ls(DatabaseInterface.DB_ACC_DIR);
+            }
+        else if(args[0].equals("-d"))
+            {
+            LCX.databaseIF.ls(DatabaseInterface.DB_LOG_DIR);
+            }
+        else if(args[0].equals("-b"))
+            {
+            LCX.databaseIF.ls(DatabaseInterface.DB_BACKUP_DIR);
+            }
         else
             {
-            System.out.println("Not implemented yet.");
+            System.out.println("An invalid flag was entered: " + args[0]);
             }
-
         }
 
     private void version(String[] args)
@@ -364,7 +523,7 @@ public class UserInterface implements Runnable
             {
             System.out.println("Server Version: " + LCX.SERVER_VERSION);
             //TODO: Make library version constant public.
-            System.out.println("Library Version: Is private for now.");
+            System.out.println("Library Version: Unknown");
             System.out.println("Protocal Version: " + ServerSocketThread.PROTOCOL_VERSION);
 
             }
@@ -465,7 +624,7 @@ public class UserInterface implements Runnable
 
     private void printLCXAccounts()
         {
-        System.out.println("Not implemented yet.");
+        System.out.println("LCX Fee account: " + DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
         }
 
     private void printName(String[] args)
@@ -488,7 +647,6 @@ public class UserInterface implements Runnable
     private void printAccount(String[] args)
         {
         System.out.println("This function is not ready yet");
-        
         }
 
     private void printLatinum(String[] args)

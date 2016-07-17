@@ -715,8 +715,9 @@ public class DatabaseInterface
             }
         }
 
-    private void backupAllAccounts()
+    public boolean backupAllAccounts()
         {
+        boolean didComplete = false;
         String backupExtention = ".sysBak";
         File[] accounts = ls(DB_ACC_DIR);
         for (int i = 0; i < accounts.length; i++)
@@ -735,12 +736,14 @@ public class DatabaseInterface
             try
                 {
                 FileUtils.copyFile(source, dest);
+                didComplete = true;
                 }
             catch (IOException e)
                 {
                 e.printStackTrace();
                 }
             }
+        return didComplete;
         }
 
     private static void makeDirs()
