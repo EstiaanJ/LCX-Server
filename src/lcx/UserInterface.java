@@ -214,31 +214,31 @@ public class UserInterface implements Runnable
             switch(level)
                {
             case "severe":
-               DatabaseInterface.dbLog.setLevel(Level.SEVERE);
+               Database.dbLog.setLevel(Level.SEVERE);
                break;
             case "warning":
-               DatabaseInterface.dbLog.setLevel(Level.WARNING);
+               Database.dbLog.setLevel(Level.WARNING);
                break;
             case "fine":
-               DatabaseInterface.dbLog.setLevel(Level.FINE);
+               Database.dbLog.setLevel(Level.FINE);
                break;
             case "finer":
-               DatabaseInterface.dbLog.setLevel(Level.FINER);
+               Database.dbLog.setLevel(Level.FINER);
                break;
             case "finest":
-               DatabaseInterface.dbLog.setLevel(Level.FINEST);
+               Database.dbLog.setLevel(Level.FINEST);
                break;
             case "off":
-               DatabaseInterface.dbLog.setLevel(Level.OFF);
+               Database.dbLog.setLevel(Level.OFF);
                break;
             case "all":
-               DatabaseInterface.dbLog.setLevel(Level.ALL);
+               Database.dbLog.setLevel(Level.ALL);
                break;
             case "info":
-               DatabaseInterface.dbLog.setLevel(Level.INFO);
+               Database.dbLog.setLevel(Level.INFO);
                break;
             case "config":
-               DatabaseInterface.dbLog.setLevel(Level.CONFIG);
+               Database.dbLog.setLevel(Level.CONFIG);
                break;
             default:
                System.out.println("An invalid log level was entered: " + log);
@@ -334,7 +334,7 @@ public class UserInterface implements Runnable
             }
 
         
-        if (DatabaseInterface.validateLatinum(latinum, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateLatinum(latinum, Database.EXTERNAL_VALIDATION))
             {
             System.out.println("New Account details: ");
             System.out.println("Account Number: " + accountNum);
@@ -354,7 +354,7 @@ public class UserInterface implements Runnable
                     }
                 else
                     {
-                    if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+                    if (Database.validateAccountNum(accountNum, Database.EXTERNAL_VALIDATION))
                         {   
                         LCX.databaseIF.createNewAccount(accountNum, name, password);
                         setLatinum(new String[] {accountNum,latinum});
@@ -392,9 +392,9 @@ public class UserInterface implements Runnable
             accountNum = args[0];
             latinum = args[1];
             }
-        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateAccountNum(accountNum, Database.EXTERNAL_VALIDATION))
             {
-            if (DatabaseInterface.validateLatinum(latinum, DatabaseInterface.EXTERNAL_VALIDATION))
+            if (Database.validateLatinum(latinum, Database.EXTERNAL_VALIDATION))
                 {
                 BigDecimal lat = new BigDecimal(latinum);
                 LCX.databaseIF.writeLatinum(accountNum, lat);
@@ -417,7 +417,7 @@ public class UserInterface implements Runnable
             accountNum = args[0];
             password = args[1];
             }
-        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateAccountNum(accountNum, Database.EXTERNAL_VALIDATION))
             {
             LCX.databaseIF.writePassword(accountNum, password);
             }
@@ -438,7 +438,7 @@ public class UserInterface implements Runnable
             name = args[1];
             }
 
-        if (DatabaseInterface.validateAccountNum(acc, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateAccountNum(acc, Database.EXTERNAL_VALIDATION))
             {
             LCX.databaseIF.writeName(acc, name);
             }
@@ -503,15 +503,15 @@ public class UserInterface implements Runnable
             }
         else if(args[0].equals("-a"))
             {
-            LCX.databaseIF.ls(DatabaseInterface.DB_ACC_DIR);
+            LCX.databaseIF.ls(Database.DB_ACC_DIR);
             }
         else if(args[0].equals("-d"))
             {
-            LCX.databaseIF.ls(DatabaseInterface.DB_LOG_DIR);
+            LCX.databaseIF.ls(Database.DB_LOG_DIR);
             }
         else if(args[0].equals("-b"))
             {
-            LCX.databaseIF.ls(DatabaseInterface.DB_ACC_BACKUP_DIR);
+            LCX.databaseIF.ls(Database.DB_ACC_BACKUP_DIR);
             }
         else
             {
@@ -566,9 +566,9 @@ public class UserInterface implements Runnable
             accountNum = args[0];
             amount = args[1];
             }
-        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateAccountNum(accountNum, Database.EXTERNAL_VALIDATION))
             {
-            if (DatabaseInterface.validateLatinum(amount, DatabaseInterface.EXTERNAL_VALIDATION))
+            if (Database.validateLatinum(amount, Database.EXTERNAL_VALIDATION))
                 {
                 LCX.databaseIF.addLatinum(accountNum, amount);
                 }
@@ -590,9 +590,9 @@ public class UserInterface implements Runnable
             accountNum = args[0];
             amount = args[1];
             }
-        if (DatabaseInterface.validateAccountNum(accountNum, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateAccountNum(accountNum, Database.EXTERNAL_VALIDATION))
             {
-            if (DatabaseInterface.validateLatinum(amount, DatabaseInterface.EXTERNAL_VALIDATION))
+            if (Database.validateLatinum(amount, Database.EXTERNAL_VALIDATION))
                 {
                 LCX.databaseIF.subLatinum(accountNum, amount);
                 }
@@ -601,7 +601,7 @@ public class UserInterface implements Runnable
 
     private void printFee()
         {
-        System.out.println("The LCX Tranfer Fee is: " + (Double.valueOf(DatabaseInterface.getFee()) * 100) + "% of the value of said transfer.");
+        System.out.println("The LCX Tranfer Fee is: " + (Double.valueOf(Database.getFee()) * 100) + "% of the value of said transfer.");
         }
 
     private void setFee(String[] args)
@@ -616,17 +616,17 @@ public class UserInterface implements Runnable
             inFee = args[0];
             }
         
-        if (DatabaseInterface.validateLatinum(inFee, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateLatinum(inFee, Database.EXTERNAL_VALIDATION))
                 {
                 BigDecimal inPercentage = new BigDecimal(inFee);
                 BigDecimal fee = inPercentage.divide(new BigDecimal("100"));
-                DatabaseInterface.setFee(fee.toPlainString());
+                Database.setFee(fee.toPlainString());
                 }
         }
 
     private void printLCXAccounts()
         {
-        System.out.println("LCX Fee account: " + DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        System.out.println("LCX Fee account: " + Database.LCX_FEE_ACCOUNT_NUMBER);
         }
 
     private void printName(String[] args)
@@ -640,7 +640,7 @@ public class UserInterface implements Runnable
             {
             acc = args[0];
             }
-         if (DatabaseInterface.validateAccountNum(acc, DatabaseInterface.EXTERNAL_VALIDATION))
+         if (Database.validateAccountNum(acc, Database.EXTERNAL_VALIDATION))
             {
             System.out.println(LCX.databaseIF.readName(acc));
             }
@@ -662,7 +662,7 @@ public class UserInterface implements Runnable
             {
             acc = args[0];
             }
-        if (DatabaseInterface.validateAccountNum(acc, DatabaseInterface.EXTERNAL_VALIDATION))
+        if (Database.validateAccountNum(acc, Database.EXTERNAL_VALIDATION))
             {
             System.out.println("Account has " + LCX.databaseIF.readLatinum(acc) + " Latinum");
             }

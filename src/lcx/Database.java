@@ -32,7 +32,7 @@ import lcx.LCX;
  *
  * @author Estiaan Janse Van Rensburg <https://github.com/EstiaanJ>
  */
-public class DatabaseInterface
+public class Database
     {
 
     public final static String DB_MAIN_DIR = "database" + File.separator;
@@ -136,7 +136,7 @@ public class DatabaseInterface
         }
 
     //***************************** Constructors | Standard OO stuff **********************************
-    public DatabaseInterface()
+    public Database()
         {
         makeDirs();
         backupAllAccounts();
@@ -294,7 +294,7 @@ public class DatabaseInterface
         File backupRecipient = createTempBackup(DB_ACC_DIR + recipientNum + ".csv", DB_ACC_BACKUP_DIR);
         File backupBank = createTempBackup(DB_ACC_DIR + LCX_FEE_ACCOUNT_NUMBER + ".csv", DB_ACC_BACKUP_DIR);
 
-        Transfer transfer = new Transfer(originNum, recipientNum, inAmount, DatabaseInterface.feeMultiplier);
+        Transfer transfer = new Transfer(originNum, recipientNum, inAmount, Database.feeMultiplier);
         
         if (transfer.execute())
             {

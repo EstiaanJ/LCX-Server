@@ -26,7 +26,7 @@ public class LCX extends Thread
     public static final ConsoleHandler conHandle = new ConsoleHandler();
     public static final Logger systemLog = Logger.getLogger( LCX.class.getName() );
     public static FileHandler fileHandler;
-    public static DatabaseInterface databaseIF;
+    public static Database databaseIF;
     private final static int PORT = 2388;
     private ServerSocket serverSocket;
     private final static int STD_TIMEOUT = 5;
@@ -134,7 +134,7 @@ public class LCX extends Thread
         conHandle.setLevel(Level.INFO);
         
         //Initialize the database.
-        databaseIF = new DatabaseInterface();
+        databaseIF = new Database();
         
         //Initialize and Start the thread that listens for command line messages
         (new Thread(new UserInterface())).start();

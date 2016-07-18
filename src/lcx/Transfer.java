@@ -5,7 +5,7 @@
  */
 package lcx;
 
-import lcx.DatabaseInterface;
+import lcx.Database;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -72,11 +72,11 @@ public class Transfer
             }
         catch (IOException e)
             {
-            DatabaseInterface.dbLog.log(Level.SEVERE, "Failed to setup transfer logs! {0}", e.toString());
+            Database.dbLog.log(Level.SEVERE, "Failed to setup transfer logs! {0}", e.toString());
             }
         
         transLog.finer("Validating transfer details...");
-        if(DatabaseInterface.validateAccountNum(inOrigin, "Transfer <init>"))
+        if(Database.validateAccountNum(inOrigin, "Transfer <init>"))
             {
             originAccount = inOrigin;
             }
@@ -87,7 +87,7 @@ public class Transfer
             transLog.log(Level.SEVERE, "Origin account number was invalid!");
             }
         
-        if(DatabaseInterface.validateAccountNum(inRecipient, "Transfer <init>"))
+        if(Database.validateAccountNum(inRecipient, "Transfer <init>"))
             {
             recipientAccount = inRecipient;
             }
@@ -98,7 +98,7 @@ public class Transfer
             transLog.log(Level.SEVERE, "Recipient account number was invalid!");
             }
         
-        if(DatabaseInterface.validateLatinum(inFee, "Transfer <init>"))
+        if(Database.validateLatinum(inFee, "Transfer <init>"))
             {
             feeFraction = inFee;
             }
@@ -107,11 +107,11 @@ public class Transfer
             feeFraction = "0.001";
             validTransfer = false;
             transLog.log(Level.SEVERE, "Fee was invalid: Not a number");
-            DatabaseInterface.dbLog.severe("LCX Fee was invalid!");
+            Database.dbLog.severe("LCX Fee was invalid!");
             lcx.LCX.systemLog.log(Level.SEVERE,"LCX Fee was invalid!");
             }
         
-        if(DatabaseInterface.validateLatinum(inAmount, "Transfer <init>"))
+        if(Database.validateLatinum(inAmount, "Transfer <init>"))
             {
             BigDecimal test = new BigDecimal(inAmount);
             if(test.signum() <= 0)
@@ -139,7 +139,7 @@ public class Transfer
         else
             {
             transLog.log(Level.SEVERE, "Validation failed!");
-            DatabaseInterface.dbLog.warning("Transfer validation failed; check transfer logs for detials.");
+            Database.dbLog.warning("Transfer validation failed; check transfer logs for detials.");
             }
         }
     
@@ -165,9 +165,9 @@ public class Transfer
     private boolean writeLatinum()
         {
         long writeStartNano = System.nanoTime();
-        File origin = new File(DatabaseInterface.DB_ACC_DIR + originAccount + ".csv");
-        File recipient = new File(DatabaseInterface.DB_ACC_DIR + recipientAccount + ".csv");
-        File bank = new File(DatabaseInterface.DB_ACC_DIR + DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER + ".csv");
+        File origin = new File(Database.DB_ACC_DIR + originAccount + ".csv");
+        File recipient = new File(Database.DB_ACC_DIR + recipientAccount + ".csv");
+        File bank = new File(Database.DB_ACC_DIR + Database.LCX_FEE_ACCOUNT_NUMBER + ".csv");
         try 
             {
             List<String> originLines =Files.readAllLines(origin.toPath());
@@ -184,13 +184,13 @@ public class Transfer
                     new Object[]{feeFraction, bankStartLatinum, bankFinalLatinum});
 
             
-            originLines.remove(DatabaseInterface.LATINUM_POS);
-            recipientLines.remove(DatabaseInterface.LATINUM_POS);
-            bankLines.remove(DatabaseInterface.LATINUM_POS);
+            originLines.remove(Database.LATINUM_POS);
+            recipientLines.remove(Database.LATINUM_POS);
+            bankLines.remove(Database.LATINUM_POS);
             
-            originLines.add(DatabaseInterface.LATINUM_POS,originFinalLatinum);
-            recipientLines.add(DatabaseInterface.LATINUM_POS,recipientFinalLatinum);
-            bankLines.add(DatabaseInterface.LATINUM_POS,bankFinalLatinum);
+            originLines.add(Database.LATINUM_POS,originFinalLatinum);
+            recipientLines.add(Database.LATINUM_POS,recipientFinalLatinum);
+            bankLines.add(Database.LATINUM_POS,bankFinalLatinum);
             
             FileOutputStream outOrigin = new FileOutputStream(origin);
             FileOutputStream outRecipient = new FileOutputStream(recipient);
@@ -232,7 +232,7 @@ public class Transfer
                     }
                 catch(IOException e)
                     {
-                    DatabaseInterface.dbLog.log(Level.WARNING, "Failed to write accounts during transfer, "
+                    Database.dbLog.log(Level.WARNING, "Failed to write accounts during transfer, "
                             + "the origin account was: {0} the recipient account was: {1}", 
                             new Object[]{originAccount, recipientAccount});
                     e.printStackTrace();
@@ -252,7 +252,7 @@ public class Transfer
             }
         catch(IOException e)
             {
-            DatabaseInterface.dbLog.log(Level.WARNING, "Failed to read accounts during transfer, "
+            Database.dbLog.log(Level.WARNING, "Failed to read accounts during transfer, "
                             + "the origin account was: {0} the recipient account was: {1}", 
                             new Object[]{originAccount, recipientAccount});
             e.printStackTrace();
@@ -306,15 +306,15 @@ public class Transfer
         
         try
             {
-            FileReader readerOrigin = new FileReader(DatabaseInterface.DB_ACC_DIR + originAccount + ".csv");
-            FileReader readerRecipient = new FileReader(DatabaseInterface.DB_ACC_DIR + recipientAccount + ".csv");
-            FileReader readerBank = new FileReader(DatabaseInterface.DB_ACC_DIR + DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER + ".csv");
+            FileReader readerOrigin = new FileReader(Database.DB_ACC_DIR + originAccount + ".csv");
+            FileReader readerRecipient = new FileReader(Database.DB_ACC_DIR + recipientAccount + ".csv");
+            FileReader readerBank = new FileReader(Database.DB_ACC_DIR + Database.LCX_FEE_ACCOUNT_NUMBER + ".csv");
             
             BufferedReader bufferedOrigin = new BufferedReader(readerOrigin);
             BufferedReader bufferedRecipient = new BufferedReader(readerRecipient);
             BufferedReader bufferedBank = new BufferedReader(readerBank);
             
-            for(int i = 0; i < DatabaseInterface.LATINUM_POS + 1; i ++)
+            for(int i = 0; i < Database.LATINUM_POS + 1; i ++)
                 {
                 originStartLatinum = bufferedOrigin.readLine();
                 recipientStartLatinum = bufferedRecipient.readLine();
@@ -336,14 +336,14 @@ public class Transfer
         catch(FileNotFoundException fnfe)
             {
             transLog.log(Level.SEVERE,"File not found during readLatinum(), file was one of these: {0}" 
-                    + ".csv" + " | {1}" + ".csv" + " | " + DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER 
+                    + ".csv" + " | {1}" + ".csv" + " | " + Database.LCX_FEE_ACCOUNT_NUMBER 
                     + ".csv", new Object[]{originAccount, recipientAccount});
             fnfe.printStackTrace();
             }
         catch(IOException e)
             {
             transLog.log(Level.SEVERE,"Failed to read from a file during readLatinum, the file was one of these: {0}"
-            + ".csv" + " | {1}" + ".csv" + " | " + DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER 
+            + ".csv" + " | {1}" + ".csv" + " | " + Database.LCX_FEE_ACCOUNT_NUMBER 
                     + ".csv", new Object[]{originAccount, recipientAccount});
             e.printStackTrace();
             }

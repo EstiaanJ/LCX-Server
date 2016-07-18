@@ -6,7 +6,7 @@
 package lcx;
 
 import lcx.Transfer;
-import lcx.DatabaseInterface;
+import lcx.Database;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
@@ -31,7 +31,7 @@ public class TransferTest
     private final static String TEST_NAME_TWO = "bob";
     private final static String TEST_PASS_TWO = "myothersomewhataveragepass";
     
-    private static DatabaseInterface dbif;
+    private static Database dbif;
     public TransferTest()
         {
         }
@@ -52,13 +52,13 @@ public class TransferTest
     @Before
     public void setUp()
         {
-        dbif = new DatabaseInterface();
+        dbif = new Database();
         }
     
     @After
     public void tearDown()
         {
-        File allFiles[] = dbif.ls(DatabaseInterface.DB_ACC_DIR);
+        File allFiles[] = dbif.ls(Database.DB_ACC_DIR);
         for(int i = 0; i < allFiles.length; i++)
             {
             rm(allFiles[i]);
@@ -81,7 +81,7 @@ public class TransferTest
         
         String testAmount = "1";
         
-        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,Database.getFee());
         boolean expResult = true;
         boolean result = transfer.execute();
         
@@ -90,7 +90,7 @@ public class TransferTest
         
         String originFinalLat = dbif.readLatinumString(originAcc);
         String recipFinalLat = dbif.readLatinumString(recipAcc);
-        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        String bankFinalLat = dbif.readLatinumString(Database.LCX_FEE_ACCOUNT_NUMBER);
         
         assertEquals(originFinalLat,"0.999");
         assertEquals(recipFinalLat,"1");
@@ -110,7 +110,7 @@ public class TransferTest
         
         String testAmount = "-1";
         
-        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,Database.getFee());
         boolean expResult = false;
         boolean result = transfer.execute();
         
@@ -119,7 +119,7 @@ public class TransferTest
         
         String originFinalLat = dbif.readLatinumString(originAcc);
         String recipFinalLat = dbif.readLatinumString(recipAcc);
-        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        String bankFinalLat = dbif.readLatinumString(Database.LCX_FEE_ACCOUNT_NUMBER);
         
         assertEquals(originFinalLat,"2");
         assertEquals(recipFinalLat,"0");
@@ -138,7 +138,7 @@ public class TransferTest
         
         String testAmount = "0";
         
-        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,Database.getFee());
         boolean expResult = false;
         boolean result = transfer.execute();
         
@@ -146,7 +146,7 @@ public class TransferTest
         
         String originFinalLat = dbif.readLatinumString(originAcc);
         String recipFinalLat = dbif.readLatinumString(recipAcc);
-        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        String bankFinalLat = dbif.readLatinumString(Database.LCX_FEE_ACCOUNT_NUMBER);
         
         assertEquals(originFinalLat,"2");
         assertEquals(recipFinalLat,"0");
@@ -165,7 +165,7 @@ public class TransferTest
         
         String testAmount = "5";
         
-        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,Database.getFee());
         boolean expResult = false;
         boolean result = transfer.execute();
         
@@ -173,7 +173,7 @@ public class TransferTest
         
         String originFinalLat = dbif.readLatinumString(originAcc);
         String recipFinalLat = dbif.readLatinumString(recipAcc);
-        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        String bankFinalLat = dbif.readLatinumString(Database.LCX_FEE_ACCOUNT_NUMBER);
         
         assertEquals(originFinalLat,"2");
         assertEquals(recipFinalLat,"0");
@@ -193,14 +193,14 @@ public class TransferTest
         
         String testAmount = "2";
         
-        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,DatabaseInterface.getFee());
+        Transfer transfer = new Transfer(originAcc,recipAcc,testAmount,Database.getFee());
         boolean expResult = false;
         boolean result = transfer.execute();
         
         assertEquals(expResult, result);
         String originFinalLat = dbif.readLatinumString(originAcc);
         String recipFinalLat = dbif.readLatinumString(recipAcc);
-        String bankFinalLat = dbif.readLatinumString(DatabaseInterface.LCX_FEE_ACCOUNT_NUMBER);
+        String bankFinalLat = dbif.readLatinumString(Database.LCX_FEE_ACCOUNT_NUMBER);
         
         assertEquals(originFinalLat,"2");
         assertEquals(recipFinalLat,"0");
